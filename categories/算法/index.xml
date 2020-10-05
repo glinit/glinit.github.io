@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>算法 on glinit</title>
+    <link>https://glinit.github.io/categories/%E7%AE%97%E6%B3%95/</link>
+    <description>Recent content in 算法 on glinit</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Mon, 05 Oct 2020 01:37:56 +0800</lastBuildDate>
+    
+	<atom:link href="https://glinit.github.io/categories/%E7%AE%97%E6%B3%95/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>NLP入门（一）词袋模型及句子相似度</title>
+      <link>https://glinit.github.io/post/nlp/NLP%E5%85%A5%E9%97%A8%E4%B8%80%E8%AF%8D%E8%A2%8B%E6%A8%A1%E5%9E%8B%E5%8F%8A%E5%8F%A5%E5%AD%90%E7%9B%B8%E4%BC%BC%E5%BA%A6/</link>
+      <pubDate>Mon, 05 Oct 2020 01:37:56 +0800</pubDate>
+      
+      <guid>https://glinit.github.io/post/nlp/NLP%E5%85%A5%E9%97%A8%E4%B8%80%E8%AF%8D%E8%A2%8B%E6%A8%A1%E5%9E%8B%E5%8F%8A%E5%8F%A5%E5%AD%90%E7%9B%B8%E4%BC%BC%E5%BA%A6/</guid>
+      <description>本文将会介绍NLP中常见的词袋模型（Bag of Words）以及如何利用词袋模型来计算句子间的相似度（余弦相似度，cosine similarit</description>
+    </item>
+    
+    <item>
+      <title>NLP入门（三）词形还原（Lemmatization)</title>
+      <link>https://glinit.github.io/post/nlp/NLP%E5%85%A5%E9%97%A8%E4%B8%89%E8%AF%8D%E5%BD%A2%E8%BF%98%E5%8E%9FLemmatization/</link>
+      <pubDate>Tue, 08 Sep 2020 01:37:56 +0800</pubDate>
+      
+      <guid>https://glinit.github.io/post/nlp/NLP%E5%85%A5%E9%97%A8%E4%B8%89%E8%AF%8D%E5%BD%A2%E8%BF%98%E5%8E%9FLemmatization/</guid>
+      <description>词形还原（Lemmatization）是文本预处理中的重要部分，与词干提取（stemming）很相似。 简单说来，词形还原就是去掉单词的词缀，</description>
+    </item>
+    
+    <item>
+      <title>NLP入门（二）探究TF-IDF的原理</title>
+      <link>https://glinit.github.io/post/nlp/NLP%E5%85%A5%E9%97%A8%E4%BA%8C%E6%8E%A2%E7%A9%B6TF-IDF%E7%9A%84%E5%8E%9F%E7%90%86/</link>
+      <pubDate>Tue, 08 Sep 2020 01:37:56 +0800</pubDate>
+      
+      <guid>https://glinit.github.io/post/nlp/NLP%E5%85%A5%E9%97%A8%E4%BA%8C%E6%8E%A2%E7%A9%B6TF-IDF%E7%9A%84%E5%8E%9F%E7%90%86/</guid>
+      <description>TF-IDF介绍 TF-IDF是NLP中一种常用的统计方法，用以评估一个字词对于一个文件集或一个语料库中的其中一份文件的重要程度，通常用于提取</description>
+    </item>
+    
+    <item>
+      <title>NLP入门（五）用深度学习实现命名实体识别（NER）</title>
+      <link>https://glinit.github.io/post/nlp/NLP%E5%85%A5%E9%97%A8%E4%BA%94%E7%94%A8%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%AE%9E%E7%8E%B0%E5%91%BD%E5%90%8D%E5%AE%9E%E4%BD%93%E8%AF%86%E5%88%ABNER/</link>
+      <pubDate>Tue, 08 Sep 2020 01:37:56 +0800</pubDate>
+      
+      <guid>https://glinit.github.io/post/nlp/NLP%E5%85%A5%E9%97%A8%E4%BA%94%E7%94%A8%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%AE%9E%E7%8E%B0%E5%91%BD%E5%90%8D%E5%AE%9E%E4%BD%93%E8%AF%86%E5%88%ABNER/</guid>
+      <description>在本文中，我们将会学习到如何使用深度学习工具来自己一步步地实现NER，只要你坚持看完，就一定会很有收获的。 几乎所有的NLP都依赖一个强大的语</description>
+    </item>
+    
+    <item>
+      <title>NLP入门（四）命名实体识别（NER）</title>
+      <link>https://glinit.github.io/post/nlp/NLP%E5%85%A5%E9%97%A8%E5%9B%9B%E5%91%BD%E5%90%8D%E5%AE%9E%E4%BD%93%E8%AF%86%E5%88%ABNER/</link>
+      <pubDate>Tue, 08 Sep 2020 01:37:56 +0800</pubDate>
+      
+      <guid>https://glinit.github.io/post/nlp/NLP%E5%85%A5%E9%97%A8%E5%9B%9B%E5%91%BD%E5%90%8D%E5%AE%9E%E4%BD%93%E8%AF%86%E5%88%ABNER/</guid>
+      <description>本文将会简单介绍自然语言处理（NLP）中的命名实体识别（NER）。 命名实体识别（Named Entity Recognition，简称NER）是信息提取、</description>
+    </item>
+    
+    <item>
+      <title>word2vec训练中文模型—wiki百科中文库</title>
+      <link>https://glinit.github.io/post/nlp/word2vec%E8%AE%AD%E7%BB%83%E4%B8%AD%E6%96%87%E6%A8%A1%E5%9E%8Bwiki%E7%99%BE%E7%A7%91%E4%B8%AD%E6%96%87%E5%BA%93/</link>
+      <pubDate>Tue, 08 Sep 2020 01:37:56 +0800</pubDate>
+      
+      <guid>https://glinit.github.io/post/nlp/word2vec%E8%AE%AD%E7%BB%83%E4%B8%AD%E6%96%87%E6%A8%A1%E5%9E%8Bwiki%E7%99%BE%E7%A7%91%E4%B8%AD%E6%96%87%E5%BA%93/</guid>
+      <description>词向量作为文本的基本结构——词的模型。良好的词向量可以达到语义相近的词在词向量空间里聚集在一起，这对后续的文本分类，文本聚类等等操作提供了便</description>
+    </item>
+    
+    <item>
+      <title>关于编辑距离的应用方案--单词或专属名词拼写检查算法</title>
+      <link>https://glinit.github.io/post/nlp/%E5%8D%95%E8%AF%8D%E6%88%96%E4%B8%93%E5%B1%9E%E5%90%8D%E8%AF%8D%E6%8B%BC%E5%86%99%E6%A3%80%E6%9F%A5%E7%AE%97%E6%B3%95/</link>
+      <pubDate>Tue, 08 Sep 2020 01:37:56 +0800</pubDate>
+      
+      <guid>https://glinit.github.io/post/nlp/%E5%8D%95%E8%AF%8D%E6%88%96%E4%B8%93%E5%B1%9E%E5%90%8D%E8%AF%8D%E6%8B%BC%E5%86%99%E6%A3%80%E6%9F%A5%E7%AE%97%E6%B3%95/</guid>
+      <description>最近在做楼盘搜索的时候遇到一个问题，用户在查询楼盘的时候回出现楼盘名称输入有误的情况，一般会出现一个或多个错字，其中同义词可以根据词典和拼音</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>工具 on glinit</title>
+    <link>https://glinit.github.io/tags/%E5%B7%A5%E5%85%B7/</link>
+    <description>Recent content in 工具 on glinit</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Tue, 08 Sep 2020 01:37:56 +0800</lastBuildDate>
+    
+	<atom:link href="https://glinit.github.io/tags/%E5%B7%A5%E5%85%B7/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>钉钉预警与代码实现</title>
+      <link>https://glinit.github.io/post/tools/%E9%92%89%E9%92%89%E9%A2%84%E8%AD%A6%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/</link>
+      <pubDate>Tue, 08 Sep 2020 01:37:56 +0800</pubDate>
+      
+      <guid>https://glinit.github.io/post/tools/%E9%92%89%E9%92%89%E9%A2%84%E8%AD%A6%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/</guid>
+      <description>​ 本文档对自定义钉钉机器人的流程与注意事项做一个简单介绍，没有知识点，作为一个日常笔记，储备一些小工具。 一、获取自定义机器人webhook 步</description>
+    </item>
+    
+  </channel>
+</rss>

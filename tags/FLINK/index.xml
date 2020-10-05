@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>FLINK on glinit</title>
+    <link>https://glinit.github.io/tags/FLINK/</link>
+    <description>Recent content in FLINK on glinit</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-CN</language>
+    <lastBuildDate>Sun, 30 Aug 2020 01:37:56 +0800</lastBuildDate>
+    
+	<atom:link href="https://glinit.github.io/tags/FLINK/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Flink基础2-Data Source介绍</title>
+      <link>https://glinit.github.io/post/flink/Flink%E5%9F%BA%E7%A1%802-Data-Source%E4%BB%8B%E7%BB%8D/</link>
+      <pubDate>Sun, 30 Aug 2020 01:37:56 +0800</pubDate>
+      
+      <guid>https://glinit.github.io/post/flink/Flink%E5%9F%BA%E7%A1%802-Data-Source%E4%BB%8B%E7%BB%8D/</guid>
+      <description>前言 Data Sources 是什么呢？就字面意思其实就可以知道：数据来源。 Flink 做为一款流式计算框架，它可用来做批处理，即处理静态的数据集、历史的数据集；也可以用来</description>
+    </item>
+    
+  </channel>
+</rss>

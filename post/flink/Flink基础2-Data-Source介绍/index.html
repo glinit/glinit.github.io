@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Flink基础2-Data Source介绍 - glinit</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="glin" /><meta name="description" content="前言 Data Sources 是什么呢？就字面意思其实就可以知道：数据来源。 Flink 做为一款流式计算框架，它可用来做批处理，即处理静态的数据集、历史的数据集；也可以用来" /><meta name="keywords" content="data warehouse, Github, flink, java, spark, ETL" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.69.2 with theme even" />
+
+
+<link rel="canonical" href="https://glinit.github.io/post/flink/Flink%E5%9F%BA%E7%A1%802-Data-Source%E4%BB%8B%E7%BB%8D/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<link href="/sass/main.min.651e6917abb0239242daa570c2bec9867267bbcd83646da5a850afe573347b44.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+<link rel="stylesheet" href="/css/reset-even.css">
+
+
+<meta property="og:title" content="Flink基础2-Data Source介绍" />
+<meta property="og:description" content="前言 Data Sources 是什么呢？就字面意思其实就可以知道：数据来源。 Flink 做为一款流式计算框架，它可用来做批处理，即处理静态的数据集、历史的数据集；也可以用来" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://glinit.github.io/post/flink/Flink%E5%9F%BA%E7%A1%802-Data-Source%E4%BB%8B%E7%BB%8D/" />
+<meta property="article:published_time" content="2020-08-30T01:37:56+08:00" />
+<meta property="article:modified_time" content="2020-08-30T01:37:56+08:00" />
+<meta itemprop="name" content="Flink基础2-Data Source介绍">
+<meta itemprop="description" content="前言 Data Sources 是什么呢？就字面意思其实就可以知道：数据来源。 Flink 做为一款流式计算框架，它可用来做批处理，即处理静态的数据集、历史的数据集；也可以用来">
+<meta itemprop="datePublished" content="2020-08-30T01:37:56&#43;08:00" />
+<meta itemprop="dateModified" content="2020-08-30T01:37:56&#43;08:00" />
+<meta itemprop="wordCount" content="2126">
+
+
+
+<meta itemprop="keywords" content="FLINK,基础," /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Flink基础2-Data Source介绍"/>
+<meta name="twitter:description" content="前言 Data Sources 是什么呢？就字面意思其实就可以知道：数据来源。 Flink 做为一款流式计算框架，它可用来做批处理，即处理静态的数据集、历史的数据集；也可以用来"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">glinit</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">首页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">关于我</li>
+      </a>
+  </ul>
+</nav>
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">glinit</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">首页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">关于我</a>
+      </li>
+  </ul>
+</nav>
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">Flink基础2-Data Source介绍</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2020-08-30 01:37 </span>
+        <div class="post-category">
+            <a href="/categories/FLINK/"> FLINK </a>
+            </div>
+          <span class="more-meta"> 约 2126 字 </span>
+          <span class="more-meta"> 预计阅读 5 分钟 </span>
+        <span id="busuanzi_container_page_pv" class="more-meta"> <span id="busuanzi_value_page_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次阅读 </span>
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#前言">前言</a></li>
+    <li><a href="#flink">Flink</a></li>
+    <li><a href="#基于集合">基于集合</a></li>
+    <li><a href="#基于文件">基于文件</a></li>
+    <li><a href="#基于-socket">基于 Socket：</a></li>
+    <li><a href="#自定义">自定义：</a></li>
+    <li><a href="#flink-目前支持如下图里面常见的-source">Flink 目前支持如下图里面常见的 Source：</a></li>
+  </ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <hr>
+<h2 id="前言">前言</h2>
+<p>Data Sources 是什么呢？就字面意思其实就可以知道：数据来源。</p>
+<p>Flink 做为一款流式计算框架，它可用来做批处理，即处理静态的数据集、历史的数据集；也可以用来做流处理，即实时的处理些实时数据流，实时的产生数据流结果，只要数据源源不断的过来，Flink 就能够一直计算下去，这个 Data Sources 就是数据的来源地。</p>
+<p>Flink 中你可以使用 StreamExecutionEnvironment.addSource(sourceFunction) 来为你的程序添加数据来源。</p>
+<p>Flink 已经提供a了若干实现好了的 source functions，当然你也可以通过实现 SourceFunction 来自定义非并行的 source 或者实现 ParallelSourceFunction 接口或者扩展 RichParallelSourceFunction 来自定义并行的 source</p>
+<h2 id="flink">Flink</h2>
+<p>StreamExecutionEnvironment 中可以使用以下几个已实现的 stream sources，</p>
+<p><img src="/images/stream_sources.png" alt="stream sources"></p>
+<p>总的来说可以分为下面几大类：</p>
+<h2 id="基于集合">基于集合</h2>
+<p>1、fromCollection(Collection) - 从 Java 的 Java.util.Collection 创建数据流。集合中的所有元素类型必须相同。</p>
+<p>2、fromCollection(Iterator, Class) - 从一个迭代器中创建数据流。Class 指定了该迭代器返回元素的类型。</p>
+<p>3、fromElements(T …) - 从给定的对象序列中创建数据流。所有对象类型必须相同。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-java" data-lang="java"><span class="n">StreamExecutionEnvironment</span> <span class="n">env</span> <span class="o">=</span> <span class="n">StreamExecutionEnvironment</span><span class="o">.</span><span class="na">getExecutionEnvironment</span><span class="o">();</span>
+
+<span class="n">DataStream</span><span class="o">&lt;</span><span class="n">Event</span><span class="o">&gt;</span> <span class="n">input</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="na">fromElements</span><span class="o">(</span>
+  <span class="k">new</span> <span class="n">Event</span><span class="o">(</span><span class="n">1</span><span class="o">,</span> <span class="s">&#34;barfoo&#34;</span><span class="o">,</span> <span class="n">1</span><span class="o">.</span><span class="na">0</span><span class="o">),</span>
+  <span class="k">new</span> <span class="n">Event</span><span class="o">(</span><span class="n">2</span><span class="o">,</span> <span class="s">&#34;start&#34;</span><span class="o">,</span> <span class="n">2</span><span class="o">.</span><span class="na">0</span><span class="o">),</span>
+  <span class="k">new</span> <span class="n">Event</span><span class="o">(</span><span class="n">3</span><span class="o">,</span> <span class="s">&#34;foobar&#34;</span><span class="o">,</span> <span class="n">3</span><span class="o">.</span><span class="na">0</span><span class="o">),</span>
+  <span class="o">...</span>
+<span class="o">);</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>4、fromParallelCollection(SplittableIterator, Class) - 从一个迭代器中创建并行数据流。Class 指定了该迭代器返回元素的类型。</p>
+<p>5、generateSequence(from, to) - 创建一个生成指定区间范围内的数字序列的并行数据流</p>
+<h2 id="基于文件">基于文件</h2>
+<p>1、readTextFile(path) - 读取文本文件，即符合 TextInputFormat 规范的文件，并将其作为字符串返回。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-shell" data-lang="shell">final StreamExecutionEnvironment <span class="nv">env</span> <span class="o">=</span> StreamExecutionEnvironment.getExecutionEnvironment<span class="o">()</span><span class="p">;</span>
+
+DataStream&lt;String&gt; <span class="nv">text</span> <span class="o">=</span> env.readTextFile<span class="o">(</span><span class="s2">&#34;file:///path/to/file&#34;</span><span class="o">)</span><span class="p">;</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>2、readFile(fileInputFormat, path) - 根据指定的文件输入格式读取文件（一次）。</p>
+<p>3、readFile(fileInputFormat, path, watchType, interval, pathFilter, typeInfo) - 这是上面两个方法内部调用的方法。它根据给定的 fileInputFormat 和读取路径读取文件。根据提供的 watchType，这个 source 可以定期（每隔 interval 毫秒）监测给定路径的新数据（FileProcessingMode.PROCESS_CONTINUOUSLY），或者处理一次路径对应文件的数据并退出（FileProcessingMode.PROCESS_ONCE）。你可以通过 pathFilter 进一步排除掉需要处理的文件。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-shell" data-lang="shell">final StreamExecutionEnvironment <span class="nv">env</span> <span class="o">=</span> StreamExecutionEnvironment.getExecutionEnvironment<span class="o">()</span><span class="p">;</span>
+
+DataStream&lt;MyEvent&gt; <span class="nv">stream</span> <span class="o">=</span> env.readFile<span class="o">(</span>
+        myFormat, myFilePath, FileProcessingMode.PROCESS_CONTINUOUSLY, 100,
+        FilePathFilter.createDefaultFilter<span class="o">()</span>, typeInfo<span class="o">)</span><span class="p">;</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>实现:</p>
+<p>在具体实现上，Flink 把文件读取过程分为两个子任务，即目录监控和数据读取。每个子任务都由单独的实体实现。目录监控由单个非并行（并行度为1）的任务执行，而数据读取由并行运行的多个任务执行。后者的并行性等于作业的并行性。单个目录监控任务的作用是扫描目录（根据 watchType 定期扫描或仅扫描一次），查找要处理的文件并把文件分割成切分片（splits），然后将这些切分片分配给下游 reader。reader 负责读取数据。每个切分片只能由一个 reader 读取，但一个 reader 可以逐个读取多个切分片。</p>
+<p>重要注意：</p>
+<p>如果 watchType 设置为 FileProcessingMode.PROCESS_CONTINUOUSLY，则当文件被修改时，其内容将被重新处理。这会打破“exactly-once”语义，因为在文件末尾附加数据将导致其所有内容被重新处理。</p>
+<p>如果 watchType 设置为 FileProcessingMode.PROCESS_ONCE，则 source 仅扫描路径一次然后退出，而不等待 reader 完成文件内容的读取。当然 reader 会继续阅读，直到读取所有的文件内容。关闭 source 后就不会再有检查点。这可能导致节点故障后的恢复速度较慢，因为该作业将从最后一个检查点恢复读取。</p>
+<h2 id="基于-socket">基于 Socket：</h2>
+<p>socketTextStream(String hostname, int port) - 从 socket 读取。元素可以用分隔符切分。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-java" data-lang="java"><span class="n">StreamExecutionEnvironment</span> <span class="n">env</span> <span class="o">=</span> <span class="n">StreamExecutionEnvironment</span><span class="o">.</span><span class="na">getExecutionEnvironment</span><span class="o">();</span>
+
+<span class="n">DataStream</span><span class="o">&lt;</span><span class="n">Tuple2</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Integer</span><span class="o">&gt;&gt;</span> <span class="n">dataStream</span> <span class="o">=</span> <span class="n">env</span>
+        <span class="o">.</span><span class="na">socketTextStream</span><span class="o">(</span><span class="s">&#34;localhost&#34;</span><span class="o">,</span> <span class="n">9999</span><span class="o">)</span> <span class="c1">// 监听 localhost 的 9999 端口过来的数据
+</span><span class="c1"></span>        <span class="o">.</span><span class="na">flatMap</span><span class="o">(</span><span class="k">new</span> <span class="n">Splitter</span><span class="o">())</span>
+        <span class="o">.</span><span class="na">keyBy</span><span class="o">(</span><span class="n">0</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">timeWindow</span><span class="o">(</span><span class="n">Time</span><span class="o">.</span><span class="na">seconds</span><span class="o">(</span><span class="n">5</span><span class="o">))</span>
+        <span class="o">.</span><span class="na">sum</span><span class="o">(</span><span class="n">1</span><span class="o">);</span>
+</code></pre></td></tr></table>
+</div>
+</div><h2 id="自定义">自定义：</h2>
+<p>addSource - 添加一个新的 source function。例如，你可以 addSource(new FlinkKafkaConsumer011&lt;&gt;(…)) 以从 Apache Kafka 读取数据</p>
+<p>说下上面几种的特点吧：</p>
+<p>1、基于集合：有界数据集，更偏向于本地测试用</p>
+<p>2、基于文件：适合监听文件修改并读取其内容</p>
+<p>3、基于 Socket：监听主机的 host port，从 Socket 中获取数据</p>
+<p>4、自定义 addSource：大多数的场景数据都是无界的，会源源不断的过来。比如去消费 Kafka 某个 topic 上的数据，这时候就需要用到这个 addSource，可能因为用的比较多的原因吧，Flink 直接提供了 FlinkKafkaConsumer011 等类可供你直接使用。你可以去看看 FlinkKafkaConsumerBase 这个基础类，它是 Flink Kafka 消费的最根本的类。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-java" data-lang="java"><span class="n">StreamExecutionEnvironment</span> <span class="n">env</span> <span class="o">=</span> <span class="n">StreamExecutionEnvironment</span><span class="o">.</span><span class="na">getExecutionEnvironment</span><span class="o">();</span>
+
+<span class="n">DataStream</span><span class="o">&lt;</span><span class="n">KafkaEvent</span><span class="o">&gt;</span> <span class="n">input</span> <span class="o">=</span> <span class="n">env</span>
+    <span class="o">.</span><span class="na">addSource</span><span class="o">(</span>
+      <span class="k">new</span> <span class="n">FlinkKafkaConsumer011</span><span class="o">&lt;&gt;(</span>
+        <span class="n">parameterTool</span><span class="o">.</span><span class="na">getRequired</span><span class="o">(</span><span class="s">&#34;input-topic&#34;</span><span class="o">),</span> <span class="c1">//从参数中获取传进来的 topic 
+</span><span class="c1"></span>        <span class="k">new</span> <span class="n">KafkaEventSchema</span><span class="o">(),</span>
+        <span class="n">parameterTool</span><span class="o">.</span><span class="na">getProperties</span><span class="o">())</span>
+      <span class="o">.</span><span class="na">assignTimestampsAndWatermarks</span><span class="o">(</span><span class="k">new</span> <span class="n">CustomWatermarkExtractor</span><span class="o">()));</span>
+</code></pre></td></tr></table>
+</div>
+</div><h2 id="flink-目前支持如下图里面常见的-source">Flink 目前支持如下图里面常见的 Source：</h2>
+<p><img src="/images/%E7%9B%AE%E5%89%8D%E6%94%AF%E6%8C%81%E5%A6%82%E4%B8%8B%E5%9B%BE%E9%87%8C%E9%9D%A2%E5%B8%B8%E8%A7%81%E7%9A%84.png" alt="目前支持如下图里面常见的"></p>
+<p>如果你想自己自定义自己的 Source 呢？</p>
+<p>那么你就需要去了解一下 SourceFunction 接口了，它是所有 stream source 的根接口，它继承自一个标记接口（空接口）Function。</p>
+<p>SourceFunction 定义了两个接口方法：
+<img src="/images/SourceFunction%E6%8E%A5%E5%8F%A3%E6%96%B9%E6%B3%95.png" alt="SourceFunction接口方法"></p>
+<p>1、run ： 启动一个 source，即对接一个外部数据源然后 emit 元素形成 stream（大部分情况下会通过在该方法里运行一个 while 循环的形式来产生 stream）。</p>
+<p>2、cancel ： 取消一个 source，也即将 run 中的循环 emit 元素的行为终止。</p>
+<p>正常情况下，一个 SourceFunction 实现这两个接口方法就可以了。其实这两个接口方法也固定了一种实现模板。</p>
+<p>比如，实现一个 XXXSourceFunction，那么大致的模板是这样的：(直接拿 FLink 源码的实例给你看看)</p>
+<p><img src="/images/XXXSourceFunction%E5%AE%9E%E7%8E%B0.png" alt="XXXSourceFunction"></p>
+
+    </div>
+
+    <div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">glin</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">
+        2020-08-30 01:37
+        
+    </span>
+  </p>
+  
+  
+</div>
+<div class="post-reward">
+  <input type="checkbox" name="reward" id="reward" hidden />
+  <label class="reward-button" for="reward">赞赏支持</label>
+  <div class="qr-code">
+    
+    <label class="qr-code-image" for="reward">
+        <img class="image" src="/images/wx.png">
+        <span>微信打赏</span>
+      </label>
+    <label class="qr-code-image" for="reward">
+        <img class="image" src="/images/zfb.png">
+        <span>支付宝打赏</span>
+      </label>
+  </div>
+</div><footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/FLINK/">FLINK</a>
+          <a href="/tags/%E5%9F%BA%E7%A1%80/">基础</a>
+          </div>
+      <nav class="post-nav">
+        <a class="prev" href="/post/tools/%E9%92%89%E9%92%89%E9%A2%84%E8%AD%A6%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0/">
+            <i class="iconfont icon-left"></i>
+            <span class="prev-text nav-default">钉钉预警与代码实现</span>
+            <span class="prev-text nav-mobile">上一篇</span>
+          </a>
+        <a class="next" href="/post/java/Spark%E6%A0%B8%E5%BF%83%E7%AE%97%E5%AD%90/">
+            <span class="next-text nav-default">Spark核心算子</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+
+  
+
+  
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="http://www.cnblogs.com/wcwen1990" class="iconfont icon-cnblogs" title="cnblogs"></a>
+      <a href="mailto:glin1696@gmail.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/glinit" class="iconfont icon-github" title="github"></a>
+  <a href="https://glinit.github.io/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://gohugo.io">Hugo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/olOwOlo/hugo-theme-even">Even</a>
+  </span>
+
+  <div class="busuanzi-footer">
+    <span id="busuanzi_container_site_pv"> 本站总访问量 <span id="busuanzi_value_site_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次 </span>
+      <span class="division">|</span>
+    <span id="busuanzi_container_site_uv"> 本站总访客数 <span id="busuanzi_value_site_uv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 人 </span>
+  </div>
+
+  <span class="copyright-year">
+    &copy; 
+    2020
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">GlinIt</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+
+
+
+<script type="text/javascript" src="/js/main.min.d7b7ada643c9c1a983026e177f141f7363b4640d619caf01d8831a6718cd44ea.js"></script>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-138883536-1', 'auto');
+	ga('set', 'anonymizeIp', true);
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+</body>
+</html>

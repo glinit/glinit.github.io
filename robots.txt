@@ -1,0 +1,2 @@
+User-agent: *
+Sitemap: https://glinit.github.io/sitemap.xml

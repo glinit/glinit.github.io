@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>word2vec训练中文模型—wiki百科中文库 - glinit</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="glin" /><meta name="description" content="词向量作为文本的基本结构——词的模型。良好的词向量可以达到语义相近的词在词向量空间里聚集在一起，这对后续的文本分类，文本聚类等等操作提供了便" /><meta name="keywords" content="data warehouse, Github, flink, java, spark, ETL" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.69.2 with theme even" />
+
+
+<link rel="canonical" href="https://glinit.github.io/post/nlp/word2vec%E8%AE%AD%E7%BB%83%E4%B8%AD%E6%96%87%E6%A8%A1%E5%9E%8Bwiki%E7%99%BE%E7%A7%91%E4%B8%AD%E6%96%87%E5%BA%93/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<link href="/sass/main.min.651e6917abb0239242daa570c2bec9867267bbcd83646da5a850afe573347b44.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+<link rel="stylesheet" href="/css/reset-even.css">
+
+
+<meta property="og:title" content="word2vec训练中文模型—wiki百科中文库" />
+<meta property="og:description" content="词向量作为文本的基本结构——词的模型。良好的词向量可以达到语义相近的词在词向量空间里聚集在一起，这对后续的文本分类，文本聚类等等操作提供了便" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://glinit.github.io/post/nlp/word2vec%E8%AE%AD%E7%BB%83%E4%B8%AD%E6%96%87%E6%A8%A1%E5%9E%8Bwiki%E7%99%BE%E7%A7%91%E4%B8%AD%E6%96%87%E5%BA%93/" />
+<meta property="article:published_time" content="2020-09-08T01:37:56+08:00" />
+<meta property="article:modified_time" content="2020-09-08T01:37:56+08:00" />
+<meta itemprop="name" content="word2vec训练中文模型—wiki百科中文库">
+<meta itemprop="description" content="词向量作为文本的基本结构——词的模型。良好的词向量可以达到语义相近的词在词向量空间里聚集在一起，这对后续的文本分类，文本聚类等等操作提供了便">
+<meta itemprop="datePublished" content="2020-09-08T01:37:56&#43;08:00" />
+<meta itemprop="dateModified" content="2020-09-08T01:37:56&#43;08:00" />
+<meta itemprop="wordCount" content="2814">
+
+
+
+<meta itemprop="keywords" content="算法,NLP," /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="word2vec训练中文模型—wiki百科中文库"/>
+<meta name="twitter:description" content="词向量作为文本的基本结构——词的模型。良好的词向量可以达到语义相近的词在词向量空间里聚集在一起，这对后续的文本分类，文本聚类等等操作提供了便"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">glinit</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">首页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">关于我</li>
+      </a>
+  </ul>
+</nav>
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">glinit</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">首页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">关于我</a>
+      </li>
+  </ul>
+</nav>
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">word2vec训练中文模型—wiki百科中文库</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2020-09-08 01:37 </span>
+        <div class="post-category">
+            <a href="/categories/%E7%AE%97%E6%B3%95/"> 算法 </a>
+            <a href="/categories/NLP/"> NLP </a>
+            </div>
+          <span class="more-meta"> 约 2814 字 </span>
+          <span class="more-meta"> 预计阅读 6 分钟 </span>
+        <span id="busuanzi_container_page_pv" class="more-meta"> <span id="busuanzi_value_page_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次阅读 </span>
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#1准备数据与预处理">1.准备数据与预处理</a></li>
+    <li><a href="#2-使用opencc进行将wikizhtxt中的所有繁体字转换为简体字">2. 使用opencc进行将wiki.zh.txt中的所有繁体字转换为简体字</a>
+      <ul>
+        <li><a href="#21-中文繁体替换成简体">2.1 中文繁体替换成简体</a></li>
+        <li><a href="#22-jieba分词">2.2 jieba分词</a></li>
+      </ul>
+    </li>
+    <li><a href="#四word2vec模型训练">四、Word2Vec模型训练</a></li>
+    <li><a href="#五模型测试">五、模型测试</a></li>
+  </ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <hr>
+<p>词向量作为文本的基本结构——词的模型。良好的词向量可以达到语义相近的词在词向量空间里聚集在一起，这对后续的文本分类，文本聚类等等操作提供了便利，这里简单介绍词向量的训练，主要是记录学习模型和词向量的保存及一些函数用法。</p>
+<h2 id="1准备数据与预处理">1.准备数据与预处理</h2>
+<p>注意事项：请将内存最好选择8g及以上的电脑，否则可能卡顿，并在开始时候安装好python的使用环境，不仅是python 的安装，最好还有就是安装好Anaconda3，修改相关的系统环境PATH变量，并且如果原先有python的路径去掉。并且还要安装好相关的gensim等库，具体参看本地文件“windowslinux 安装gensim简易方法”。</p>
+<p>首先需要一份比较大的中文语料数据，可以考虑中文的维基百科（也可以试试搜狗的新闻语料库）。中文维基百科的打包文件地址为
+<a href="https://dumps.wikimedia.org/zhwiki/latest/zhwiki-latest-pages-articles.xml.bz2">https://dumps.wikimedia.org/zhwiki/latest/zhwiki-latest-pages-articles.xml.bz2</a>
+这个下载可能会比较慢，有需要的可以加微信发网盘链接。</p>
+<p>中文维基百科的数据不是太大，xml的压缩文件大约1G左右。首先用 process_wiki_data.py处理这个XML压缩文件，执行</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-shell" data-lang="shell">pythonprocess_wiki_data.py zhwiki-latest-pages-articles.xml.bz2 wiki.zh.txt
+</code></pre></td></tr></table>
+</div>
+</div><p>其中，process_wiki_data.py代码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">gensim.corpora</span> <span class="kn">import</span> <span class="n">WikiCorpus</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">program</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">program</span><span class="p">)</span>    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1">: </span><span class="si">%(levelname)s</span><span class="s1">: </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&#34;running </span><span class="si">%s</span><span class="s2">&#34;</span> <span class="o">%</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">))</span>
+    <span class="c1"># check and process input arguments</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">print</span> <span class="p">(</span> <span class="nb">globals</span><span class="p">()[</span><span class="s1">&#39;__doc__&#39;</span><span class="p">]</span> <span class="o">%</span> <span class="nb">locals</span><span class="p">()</span> <span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">inp</span><span class="p">,</span> <span class="n">outp</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">space</span> <span class="o">=</span> <span class="s2">&#34; &#34;</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">output</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">outp</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span><span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+<span class="c1">#这里网络上的内容是不正确，自己运行的时候都是报编码错误，具体可本地帮助文档</span>
+<span class="c1">#Python UnicodeEncodeError &#39;gbk&#39; codec can&#39;t encode character 解决方法</span>
+    <span class="n">wiki</span> <span class="o">=</span> <span class="n">WikiCorpus</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">lemmatize</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">dictionary</span><span class="o">=</span><span class="p">{})</span>
+    <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">wiki</span><span class="o">.</span><span class="n">get_texts</span><span class="p">():</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">10000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&#34;Saved &#34;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&#34; articles&#34;</span><span class="p">)</span>
+    <span class="n">output</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&#34;Finished Saved &#34;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&#34; articles&#34;</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>得到结果信息如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-shell" data-lang="shell">2017-11-20 11:03:29,427: INFO: Saved <span class="m">10000</span> articles
+2017-11-20 11:04:08,134: INFO: Saved <span class="m">20000</span> articles
+2017-11-20 11:04:43,148: INFO: Saved <span class="m">30000</span> articles
+……
+2017-11-20 11:26:59,867: INFO: Saved <span class="m">280000</span> articles
+2017-11-20 11:27:55,025: INFO: Saved <span class="m">290000</span> articles
+2017-11-20 11:28:56,531: INFO: Saved <span class="m">300000</span> articles
+2017-11-20 11:29:06,494: INFO: finished iterating over Wikipedia corpus of <span class="m">30173</span>
+<span class="m">2</span> documents with <span class="m">68023327</span> positions <span class="o">(</span>total <span class="m">3037547</span> articles, <span class="m">81054190</span> positions
+before pruning articles shorter than <span class="m">50</span> words<span class="o">)</span>
+2017-11-20 11:29:06,640: INFO: Finished Saved <span class="m">301732</span> articles
+</code></pre></td></tr></table>
+</div>
+</div><h2 id="2-使用opencc进行将wikizhtxt中的所有繁体字转换为简体字">2. 使用opencc进行将wiki.zh.txt中的所有繁体字转换为简体字</h2>
+<h3 id="21-中文繁体替换成简体">2.1 中文繁体替换成简体</h3>
+<p>Wiki中文语料中包含了很多繁体字，需要转成简体字再进行处理，这里使用到了OpenCC工具进行转换。</p>
+<p>（由于网上的实践python的jieba的完成分词操作的代码的不熟悉，所以采用了是opencc先进行的对于wiki.zh.txt进行繁体字与简体字的进一步的预先处理，将所有的繁体字转换成简体字）</p>
+<h4 id="1安装opencc">（1）安装OpenCC</h4>
+<p>到以下链接地址下载对应版本的OpenCC，本人下载的版本是opencc-1.0.1-win64.7z。
+<a href="https://bintray.com/package/files/byvoid/opencc/OpenCC">https://bintray.com/package/files/byvoid/opencc/OpenCC</a>
+另外，资料显示还有python版本的，使用pip install opencc-python进行安装，未实践不做赘述。
+（2）使用OpenCC进行繁简转换
+进入解压后的opencc的目录（opencc-1.0.1-win64），双击打开opencc.exe文件。将wiki.zh.txt文件复制黏贴放在opencc目录中，打开dos窗口（Shift+鼠标右键-&gt;在此处打开命令窗口），输入如下命令行</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-shell" data-lang="shell">opencc -i wiki.zh.txt -o wiki.zh.simp.txt -c t2s.json
+</code></pre></td></tr></table>
+</div>
+</div><p>则会得到文件wiki.zh.simp.txt，即转成了简体的中文。</p>
+<p>得到大约是998mb的wiki.zh.simp.txt文件，将其再是剪切放回到原先的执行目录（自己设置的文件执行目录）中。</p>
+<p>####（3）结果查看
+解压后的txt有900多M，用notepad++无法打开，所以采用python自带的IO进行读取。Python代码如下：设置一个文件名为openFile.py。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">codecs</span><span class="o">,</span><span class="nn">sys</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;wiki.zh.simp.seg.txt&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&#34;utf8&#34;</span><span class="p">)</span>
+<span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+<span class="k">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="22-jieba分词">2.2 jieba分词</h3>
+<p>本例中采用结巴分词对字体简化后的wiki中文语料数据集进行分词，在执行代码前需要安装jieba（pipinstall jieba）模块。由于此语料已经去除了标点符号，因此在分词程序中无需进行清洗操作，可直接分词。若是自己采集的数据还需进行标点符号去除和去除停用词的操作。
+Python实现代码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#逐行读取文件数据进行jieba分词</span>
+ 
+<span class="kn">import</span> <span class="nn">jieba</span>
+<span class="kn">import</span> <span class="nn">jieba.analyse</span>
+<span class="kn">import</span> <span class="nn">jieba.posseg</span> <span class="kn">as</span> <span class="nn">pseg</span> <span class="c1">#引入词性标注接口</span>
+<span class="kn">import</span>  <span class="nn">codecs</span><span class="o">,</span><span class="nn">sys</span>
+ 
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">f</span><span class="o">=</span><span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;wiki.zh.simp.txt&#39;</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">,</span><span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="n">target</span><span class="o">=</span><span class="n">codecs</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;wiki.zh.simp.seg.txt&#39;</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">,</span><span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="k">print</span> <span class="p">(</span><span class="s1">&#39;open files.&#39;</span><span class="p">)</span>
+ 
+    <span class="n">lineNum</span><span class="o">=</span><span class="mi">1</span>
+    <span class="n">line</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+    <span class="k">while</span> <span class="n">line</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;---processing&#39;</span><span class="p">,</span><span class="n">lineNum</span><span class="p">,</span><span class="s1">&#39;article---&#39;</span><span class="p">)</span>
+        <span class="n">seg_list</span> <span class="o">=</span> <span class="n">jieba</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">line</span> <span class="p">,</span><span class="n">cut_all</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">line_seg</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">seg_list</span><span class="p">)</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">line_seg</span><span class="p">)</span>
+        <span class="n">lineNum</span> <span class="o">=</span> <span class="n">lineNum</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+ 
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;well done !!!&#39;</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">target</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>代码执行完成后得到一个1.12G大小的文档wiki.zh.simp.seg.txt。分词结果截图如下所示：</p>
+<p><img src="media/16013902179472.jpg" alt=""></p>
+<h2 id="四word2vec模型训练">四、Word2Vec模型训练</h2>
+<p>（1）word2vec模型实现
+分好词的文档即可进行word2vec词向量模型的训练了。文档较大，本人在8GWin7的电脑中训练完成，且速度但是速度不是很快。具体Python代码实现如下所示，文件命名为train_word2vec_model.py</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># !/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># train_word2vec_model.py用于训练模型</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">from</span> <span class="nn">gensim.corpora</span> <span class="kn">import</span> <span class="n">WikiCorpus</span>
+<span class="kn">from</span> <span class="nn">gensim.models</span> <span class="kn">import</span> <span class="n">Word2Vec</span>
+<span class="kn">from</span> <span class="nn">gensim.models.word2vec</span> <span class="kn">import</span> <span class="n">LineSentence</span>
+ 
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">program</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">program</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1">: </span><span class="si">%(levelname)s</span><span class="s1">: </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&#34;running </span><span class="si">%s</span><span class="s2">&#34;</span> <span class="o">%</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">))</span>
+    <span class="c1"># check and process input arguments</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="k">print</span> <span class="p">(</span><span class="nb">globals</span><span class="p">()[</span><span class="s1">&#39;__doc__&#39;</span><span class="p">]</span> <span class="o">%</span> <span class="nb">locals</span><span class="p">())</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">inp</span><span class="p">,</span> <span class="n">outp1</span><span class="p">,</span> <span class="n">outp2</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Word2Vec</span><span class="p">(</span><span class="n">LineSentence</span><span class="p">(</span><span class="n">inp</span><span class="p">),</span> <span class="n">size</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">min_count</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                     <span class="n">workers</span><span class="o">=</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">())</span>
+    <span class="c1"># trim unneeded model memory = use(much) less RAM</span>
+    <span class="c1"># model.init_sims(replace=True)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">outp1</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">save_word2vec_format</span><span class="p">(</span><span class="n">outp2</span><span class="p">,</span> <span class="n">binary</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>接着用word2vec工具训练（执行代码）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-shell" data-lang="shell">python train_word2vec_model.pywiki.zh.txt.seg wiki.zh.txt.model wiki.zh.txt.vector
+
+
+</code></pre></td></tr></table>
+</div>
+</div><p>（2）运行结果查看</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-shell" data-lang="shell">2017-11-19 21:54:14,887: INFO: training on <span class="m">822697865</span> raw words <span class="o">(</span><span class="m">765330910</span> effective words<span class="o">)</span> took 1655.2s, <span class="m">462390</span> effective words/s
+2017-11-19 21:54:14,888: INFO: saving Word2Vec object under /Users/sy/Desktop/pyRoot/wiki_zh_vec/wiki.zh.text.model, separately None
+2017-11-19 21:54:14,888: INFO: not storing attribute syn0norm
+2017-11-19 21:54:14,889: INFO: storing np array <span class="s1">&#39;syn0&#39;</span> to /Users/sy/Desktop/pyRoot/wiki_zh_vec/wiki.zh.text.model.wv.syn0.npy
+2017-11-19 21:54:16,505: INFO: storing np array <span class="s1">&#39;syn1neg&#39;</span> to /Users/sy/Desktop/pyRoot/wiki_zh_vec/wiki.zh.text.model.syn1neg.npy
+2017-11-19 21:54:18,123: INFO: not storing attribute cum_table
+2017-11-19 21:54:26,542: INFO: saved E:/Codes/DeepLearning/NLP/wiki.zh.text.model
+2017-11-19 21:54:26,543: INFO: storing 733434x400 projection weights into E:/Codes/DeepLearning/NLP/wiki.zh.text.model
+</code></pre></td></tr></table>
+</div>
+</div><p>摘取了最后几行代码运行信息，代码运行完成后得到如下四个文件，其wiki.zh.text.model是建好的模型，wiki.zh.text.vector是词向量。</p>
+<p><img src="media/16013903334247.jpg" alt=""></p>
+<h2 id="五模型测试">五、模型测试</h2>
+<p>模型训练好后，来测试模型的结果。Python代码如下，文件名为model_match.py。（目前调试总是失败，还未找到import关于多数组的解决方法，只好退而求其次，在dos窗口直接运行，也是一种方法）。</p>
+<p>其代码如下（调试失败，需要进一步搜索解决方案）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># model_match.py 测试训练好的模型</span>
+ 
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span><span class="n">category</span><span class="o">=</span><span class="ne">UserWarning</span><span class="p">,</span><span class="n">module</span><span class="o">=</span><span class="s1">&#39;gensim&#39;</span><span class="p">)</span>
+<span class="c1">#忽略警告</span>
+<span class="c1">#import sys</span>
+<span class="c1">#reload(sys)</span>
+<span class="c1">#sys.setdefaultencoding(&#39;utf-8&#39;)</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="c1">#reload(sys)</span>
+<span class="c1">#sys.setdefaultencoding(&#34;utf-8&#34;)</span>
+<span class="kn">import</span> <span class="nn">importlib</span>
+<span class="n">importlib</span><span class="o">.</span><span class="n">reload</span><span class="p">(</span><span class="n">sys</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">gensim</span>
+ 
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span> <span class="p">:</span>
+    <span class="n">fdir</span><span class="o">=</span><span class="s1">&#39;E:/PyCharm/Codes/DeepLearning/NLP/&#39;</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Word2Vec</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fdir</span> <span class="o">+</span> <span class="s1">&#39;wiki.zh.txt.model&#39;</span><span class="p">)</span>
+ 
+    <span class="n">word</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">most_similar</span><span class="p">(</span><span class="sa">u</span><span class="s1">&#39;手机&#39;</span><span class="p">)</span>
+    <span class="c1">#  u 表示是utf-8编码，如果是英文则不需要书写u，而在本例中需要</span>
+    <span class="c1">#如果需要训练或者测试模型，可以对 &#39;&#39; 内的手机这个词汇进行修改</span>
+    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">word</span> <span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="c1">#内里呈现的是二维的数组，并且t[0]表示是对应的关联词汇，t[1]表示关联度多高。使用概率小数表达</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>首先该执行目录下输入：python进入到Anaconda的python环境。</p>
+<p>在dos窗口中依次输入以下代码行。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">gensim</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">gensim</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Word2Vec</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&#34;wiki.zh.txt.model&#34;</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">most_similar</span><span class="p">(</span><span class="sa">u</span><span class="s2">&#34;足球&#34;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>注意事项：在for循环输入之后，看见的有以下的情况，请注意按下tab键，或者是连续4下空格键，不然会出现异常报错。</p>
+<p>完整输入过程显示以及结果如下：
+<img src="media/16013904033573.jpg" alt=""></p>
+<p>以上，关于word2vec训练模型以及完毕，之后的对于其他的训练文本，可按照自己所需进行。并且类似的我们还可以训练其他的语料库等等。</p>
+
+    </div>
+
+    <div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">glin</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">
+        2020-09-08 01:37
+        
+    </span>
+  </p>
+  
+  
+</div>
+<div class="post-reward">
+  <input type="checkbox" name="reward" id="reward" hidden />
+  <label class="reward-button" for="reward">赞赏支持</label>
+  <div class="qr-code">
+    
+    <label class="qr-code-image" for="reward">
+        <img class="image" src="/images/wx.png">
+        <span>微信打赏</span>
+      </label>
+    <label class="qr-code-image" for="reward">
+        <img class="image" src="/images/zfb.png">
+        <span>支付宝打赏</span>
+      </label>
+  </div>
+</div><footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/%E7%AE%97%E6%B3%95/">算法</a>
+          <a href="/tags/NLP/">NLP</a>
+          </div>
+      <nav class="post-nav">
+        <a class="prev" href="/post/nlp/NLP%E5%85%A5%E9%97%A8%E5%9B%9B%E5%91%BD%E5%90%8D%E5%AE%9E%E4%BD%93%E8%AF%86%E5%88%ABNER/">
+            <i class="iconfont icon-left"></i>
+            <span class="prev-text nav-default">NLP入门（四）命名实体识别（NER）</span>
+            <span class="prev-text nav-mobile">上一篇</span>
+          </a>
+        <a class="next" href="/post/nlp/%E5%8D%95%E8%AF%8D%E6%88%96%E4%B8%93%E5%B1%9E%E5%90%8D%E8%AF%8D%E6%8B%BC%E5%86%99%E6%A3%80%E6%9F%A5%E7%AE%97%E6%B3%95/">
+            <span class="next-text nav-default">关于编辑距离的应用方案--单词或专属名词拼写检查算法</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+
+  
+
+  
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="http://www.cnblogs.com/wcwen1990" class="iconfont icon-cnblogs" title="cnblogs"></a>
+      <a href="mailto:glin1696@gmail.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/glinit" class="iconfont icon-github" title="github"></a>
+  <a href="https://glinit.github.io/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://gohugo.io">Hugo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/olOwOlo/hugo-theme-even">Even</a>
+  </span>
+
+  <div class="busuanzi-footer">
+    <span id="busuanzi_container_site_pv"> 本站总访问量 <span id="busuanzi_value_site_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次 </span>
+      <span class="division">|</span>
+    <span id="busuanzi_container_site_uv"> 本站总访客数 <span id="busuanzi_value_site_uv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 人 </span>
+  </div>
+
+  <span class="copyright-year">
+    &copy; 
+    2020
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">GlinIt</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+
+
+
+<script type="text/javascript" src="/js/main.min.d7b7ada643c9c1a983026e177f141f7363b4640d619caf01d8831a6718cd44ea.js"></script>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-138883536-1', 'auto');
+	ga('set', 'anonymizeIp', true);
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+</body>
+</html>

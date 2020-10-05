@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>NLP入门（五）用深度学习实现命名实体识别（NER） - glinit</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="glin" /><meta name="description" content="在本文中，我们将会学习到如何使用深度学习工具来自己一步步地实现NER，只要你坚持看完，就一定会很有收获的。 几乎所有的NLP都依赖一个强大的语" /><meta name="keywords" content="data warehouse, Github, flink, java, spark, ETL" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.69.2 with theme even" />
+
+
+<link rel="canonical" href="https://glinit.github.io/post/nlp/NLP%E5%85%A5%E9%97%A8%E4%BA%94%E7%94%A8%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%AE%9E%E7%8E%B0%E5%91%BD%E5%90%8D%E5%AE%9E%E4%BD%93%E8%AF%86%E5%88%ABNER/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<link href="/sass/main.min.651e6917abb0239242daa570c2bec9867267bbcd83646da5a850afe573347b44.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+<link rel="stylesheet" href="/css/reset-even.css">
+
+
+<meta property="og:title" content="NLP入门（五）用深度学习实现命名实体识别（NER）" />
+<meta property="og:description" content="在本文中，我们将会学习到如何使用深度学习工具来自己一步步地实现NER，只要你坚持看完，就一定会很有收获的。 几乎所有的NLP都依赖一个强大的语" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://glinit.github.io/post/nlp/NLP%E5%85%A5%E9%97%A8%E4%BA%94%E7%94%A8%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E5%AE%9E%E7%8E%B0%E5%91%BD%E5%90%8D%E5%AE%9E%E4%BD%93%E8%AF%86%E5%88%ABNER/" />
+<meta property="article:published_time" content="2020-09-08T01:37:56+08:00" />
+<meta property="article:modified_time" content="2020-09-08T01:37:56+08:00" />
+<meta itemprop="name" content="NLP入门（五）用深度学习实现命名实体识别（NER）">
+<meta itemprop="description" content="在本文中，我们将会学习到如何使用深度学习工具来自己一步步地实现NER，只要你坚持看完，就一定会很有收获的。 几乎所有的NLP都依赖一个强大的语">
+<meta itemprop="datePublished" content="2020-09-08T01:37:56&#43;08:00" />
+<meta itemprop="dateModified" content="2020-09-08T01:37:56&#43;08:00" />
+<meta itemprop="wordCount" content="6065">
+
+
+
+<meta itemprop="keywords" content="算法,基础,NLP," /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="NLP入门（五）用深度学习实现命名实体识别（NER）"/>
+<meta name="twitter:description" content="在本文中，我们将会学习到如何使用深度学习工具来自己一步步地实现NER，只要你坚持看完，就一定会很有收获的。 几乎所有的NLP都依赖一个强大的语"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">glinit</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">首页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">关于我</li>
+      </a>
+  </ul>
+</nav>
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">glinit</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">首页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">关于我</a>
+      </li>
+  </ul>
+</nav>
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">NLP入门（五）用深度学习实现命名实体识别（NER）</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2020-09-08 01:37 </span>
+        <div class="post-category">
+            <a href="/categories/%E7%AE%97%E6%B3%95/"> 算法 </a>
+            <a href="/categories/NLP/"> NLP </a>
+            </div>
+          <span class="more-meta"> 约 6065 字 </span>
+          <span class="more-meta"> 预计阅读 13 分钟 </span>
+        <span id="busuanzi_container_page_pv" class="more-meta"> <span id="busuanzi_value_page_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次阅读 </span>
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#项目配置">项目配置</a></li>
+    <li><a href="#建模">建模</a></li>
+    <li><a href="#模型训练">模型训练</a></li>
+    <li><a href="#模型预测">模型预测</a></li>
+  </ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <hr>
+<p>在本文中，我们将会学习到如何使用深度学习工具来自己一步步地实现NER，只要你坚持看完，就一定会很有收获的。
+  几乎所有的NLP都依赖一个强大的语料库，本项目实现NER的语料库如下(文件名为train.txt，一共42000行，这里只展示前15行，可以在文章最后的Github地址下载该语料库)：
+  
+  </p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="n">played</span> <span class="n">on</span> <span class="n">Monday</span> <span class="p">(</span> <span class="n">home</span> <span class="n">team</span> <span class="ow">in</span> <span class="n">CAPS</span> <span class="p">)</span> <span class="p">:</span>
+<span class="n">VBD</span> <span class="n">IN</span> <span class="n">NNP</span> <span class="p">(</span> <span class="n">NN</span> <span class="n">NN</span> <span class="n">IN</span> <span class="n">NNP</span> <span class="p">)</span> <span class="p">:</span>
+<span class="n">O</span> <span class="n">O</span> <span class="n">O</span> <span class="n">O</span> <span class="n">O</span> <span class="n">O</span> <span class="n">O</span> <span class="n">O</span> <span class="n">O</span> <span class="n">O</span>
+<span class="n">American</span> <span class="n">League</span>
+<span class="n">NNP</span> <span class="n">NNP</span>
+<span class="n">B</span><span class="o">-</span><span class="n">MISC</span> <span class="n">I</span><span class="o">-</span><span class="n">MISC</span>
+<span class="n">Cleveland</span> <span class="mi">2</span> <span class="n">DETROIT</span> <span class="mi">1</span>
+<span class="n">NNP</span> <span class="n">CD</span> <span class="n">NNP</span> <span class="n">CD</span>
+<span class="n">B</span><span class="o">-</span><span class="n">ORG</span> <span class="n">O</span> <span class="n">B</span><span class="o">-</span><span class="n">ORG</span> <span class="n">O</span>
+<span class="n">BALTIMORE</span> <span class="mi">12</span> <span class="n">Oakland</span> <span class="mi">11</span> <span class="p">(</span> <span class="mi">10</span> <span class="n">innings</span> <span class="p">)</span>
+<span class="n">VB</span> <span class="n">CD</span> <span class="n">NNP</span> <span class="n">CD</span> <span class="p">(</span> <span class="n">CD</span> <span class="n">NN</span> <span class="p">)</span>
+<span class="n">B</span><span class="o">-</span><span class="n">ORG</span> <span class="n">O</span> <span class="n">B</span><span class="o">-</span><span class="n">ORG</span> <span class="n">O</span> <span class="n">O</span> <span class="n">O</span> <span class="n">O</span> <span class="n">O</span>
+<span class="n">TORONTO</span> <span class="mi">5</span> <span class="n">Minnesota</span> <span class="mi">3</span>
+<span class="n">TO</span> <span class="n">CD</span> <span class="n">NNP</span> <span class="n">CD</span>
+<span class="n">B</span><span class="o">-</span><span class="n">ORG</span> <span class="n">O</span> <span class="n">B</span><span class="o">-</span><span class="n">ORG</span> <span class="n">O</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>简单介绍下该语料库的结构：该语料库一共42000行，每三行为一组，其中，第一行为英语句子，第二行为每个句子的词性（关于英语单词的词性，可参考文章：NLP入门（三）词形还原（Lemmatization）），第三行为NER系统的标注，具体的含义会在之后介绍。
+  
+  我们的NER项目的名称为DL_4_NER，结构如下：</p>
+<p><img src="media/15999979342080.jpg" alt=""></p>
+<p>项目中每个文件的功能如下：</p>
+<p>utils.py: 项目配置及数据导入
+data_processing.py: 数据探索
+Bi_LSTM_Model_training.py: 模型创建及训练
+Bi_LSTM_Model_predict.py: 对新句子进行NER预测
+  接下来，笔者将结合代码文件，分部介绍该项目的步骤，当所有步骤介绍完毕后，我们的项目就结束了，而你，也就知道了如何用深度学习实现命名实体识别（NER）。
+  Let’s begin!
+  </p>
+<h2 id="项目配置">项目配置</h2>
+<p>  第一步，是项目的配置及数据导入，在utils.py文件中实现，完整的代码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+
+<span class="c1"># basic settings for DL_4_NER Project</span>
+<span class="n">BASE_DIR</span> <span class="o">=</span> <span class="s2">&#34;F://NERSystem&#34;</span>
+<span class="n">CORPUS_PATH</span> <span class="o">=</span> <span class="s2">&#34;</span><span class="si">%s</span><span class="s2">/train.txt&#34;</span> <span class="o">%</span> <span class="n">BASE_DIR</span>
+
+<span class="n">KERAS_MODEL_SAVE_PATH</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/Bi-LSTM-4-NER.h5&#39;</span> <span class="o">%</span> <span class="n">BASE_DIR</span>
+<span class="n">WORD_DICTIONARY_PATH</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/word_dictionary.pk&#39;</span> <span class="o">%</span> <span class="n">BASE_DIR</span>
+<span class="n">InVERSE_WORD_DICTIONARY_PATH</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/inverse_word_dictionary.pk&#39;</span> <span class="o">%</span> <span class="n">BASE_DIR</span>
+<span class="n">LABEL_DICTIONARY_PATH</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/label_dictionary.pk&#39;</span> <span class="o">%</span> <span class="n">BASE_DIR</span>
+<span class="n">OUTPUT_DICTIONARY_PATH</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/output_dictionary.pk&#39;</span> <span class="o">%</span> <span class="n">BASE_DIR</span>
+
+<span class="n">CONSTANTS</span> <span class="o">=</span> <span class="p">[</span>
+             <span class="n">KERAS_MODEL_SAVE_PATH</span><span class="p">,</span>
+             <span class="n">InVERSE_WORD_DICTIONARY_PATH</span><span class="p">,</span>
+             <span class="n">WORD_DICTIONARY_PATH</span><span class="p">,</span>
+             <span class="n">LABEL_DICTIONARY_PATH</span><span class="p">,</span>
+             <span class="n">OUTPUT_DICTIONARY_PATH</span>
+             <span class="p">]</span>
+
+<span class="c1"># load data from corpus to from pandas DataFrame</span>
+<span class="k">def</span> <span class="nf">load_data</span><span class="p">():</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CORPUS_PATH</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">text_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()]</span>
+    <span class="n">text_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">text_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">text_data</span><span class="p">))]</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">text_data</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
+
+    <span class="c1"># Transforming data to matrix format for neural network</span>
+    <span class="n">input_data</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">text_data</span><span class="p">[</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+        <span class="n">sentence_no</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sentence_no</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">input_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+
+    <span class="n">input_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">input_data</span><span class="p">]),</span>\
+                               <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;word&#39;</span><span class="p">,</span> <span class="s1">&#39;pos&#39;</span><span class="p">,</span> <span class="s1">&#39;tag&#39;</span><span class="p">,</span> <span class="s1">&#39;sent_no&#39;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">input_data</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>在该代码中，先是设置了语料库文件的路径CORPUS_PATH，KERAS模型保存路径KERAS_MODEL_SAVE_PATH，以及在项目过程中会用到的三个字典的保存路径（以pickle文件形式保存）WORD_DICTIONARY_PATH，LABEL_DICTIONARY_PATH， OUTPUT_DICTIONARY_PATH。然后是load_data()函数，它将语料库中的文本以Pandas中的DataFrame结构展示出来，该数据框的前30行如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python">         <span class="n">word</span>  <span class="n">pos</span>     <span class="n">tag</span> <span class="n">sent_no</span>
+<span class="mi">0</span>      <span class="n">played</span>  <span class="n">VBD</span>       <span class="n">O</span>       <span class="mi">1</span>
+<span class="mi">1</span>          <span class="n">on</span>   <span class="n">IN</span>       <span class="n">O</span>       <span class="mi">1</span>
+<span class="mi">2</span>      <span class="n">Monday</span>  <span class="n">NNP</span>       <span class="n">O</span>       <span class="mi">1</span>
+<span class="mi">3</span>           <span class="p">(</span>    <span class="p">(</span>       <span class="n">O</span>       <span class="mi">1</span>
+<span class="mi">4</span>        <span class="n">home</span>   <span class="n">NN</span>       <span class="n">O</span>       <span class="mi">1</span>
+<span class="mi">5</span>        <span class="n">team</span>   <span class="n">NN</span>       <span class="n">O</span>       <span class="mi">1</span>
+<span class="mi">6</span>          <span class="ow">in</span>   <span class="n">IN</span>       <span class="n">O</span>       <span class="mi">1</span>
+<span class="mi">7</span>        <span class="n">CAPS</span>  <span class="n">NNP</span>       <span class="n">O</span>       <span class="mi">1</span>
+<span class="mi">8</span>           <span class="p">)</span>    <span class="p">)</span>       <span class="n">O</span>       <span class="mi">1</span>
+<span class="mi">9</span>           <span class="p">:</span>    <span class="p">:</span>       <span class="n">O</span>       <span class="mi">1</span>
+<span class="mi">10</span>   <span class="n">American</span>  <span class="n">NNP</span>  <span class="n">B</span><span class="o">-</span><span class="n">MISC</span>       <span class="mi">2</span>
+<span class="mi">11</span>     <span class="n">League</span>  <span class="n">NNP</span>  <span class="n">I</span><span class="o">-</span><span class="n">MISC</span>       <span class="mi">2</span>
+<span class="mi">12</span>  <span class="n">Cleveland</span>  <span class="n">NNP</span>   <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>       <span class="mi">3</span>
+<span class="mi">13</span>          <span class="mi">2</span>   <span class="n">CD</span>       <span class="n">O</span>       <span class="mi">3</span>
+<span class="mi">14</span>    <span class="n">DETROIT</span>  <span class="n">NNP</span>   <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>       <span class="mi">3</span>
+<span class="mi">15</span>          <span class="mi">1</span>   <span class="n">CD</span>       <span class="n">O</span>       <span class="mi">3</span>
+<span class="mi">16</span>  <span class="n">BALTIMORE</span>   <span class="n">VB</span>   <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>       <span class="mi">4</span>
+<span class="mi">17</span>         <span class="mi">12</span>   <span class="n">CD</span>       <span class="n">O</span>       <span class="mi">4</span>
+<span class="mi">18</span>    <span class="n">Oakland</span>  <span class="n">NNP</span>   <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>       <span class="mi">4</span>
+<span class="mi">19</span>         <span class="mi">11</span>   <span class="n">CD</span>       <span class="n">O</span>       <span class="mi">4</span>
+<span class="mi">20</span>          <span class="p">(</span>    <span class="p">(</span>       <span class="n">O</span>       <span class="mi">4</span>
+<span class="mi">21</span>         <span class="mi">10</span>   <span class="n">CD</span>       <span class="n">O</span>       <span class="mi">4</span>
+<span class="mi">22</span>    <span class="n">innings</span>   <span class="n">NN</span>       <span class="n">O</span>       <span class="mi">4</span>
+<span class="mi">23</span>          <span class="p">)</span>    <span class="p">)</span>       <span class="n">O</span>       <span class="mi">4</span>
+<span class="mi">24</span>    <span class="n">TORONTO</span>   <span class="n">TO</span>   <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>       <span class="mi">5</span>
+<span class="mi">25</span>          <span class="mi">5</span>   <span class="n">CD</span>       <span class="n">O</span>       <span class="mi">5</span>
+<span class="mi">26</span>  <span class="n">Minnesota</span>  <span class="n">NNP</span>   <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>       <span class="mi">5</span>
+<span class="mi">27</span>          <span class="mi">3</span>   <span class="n">CD</span>       <span class="n">O</span>       <span class="mi">5</span>
+<span class="mi">28</span>  <span class="n">Milwaukee</span>  <span class="n">NNP</span>   <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>       <span class="mi">6</span>
+<span class="mi">29</span>          <span class="mi">3</span>   <span class="n">CD</span>       <span class="n">O</span>       <span class="mi">6</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>在该数据框中，word这一列表示文本语料库中的单词，pos这一列表示该单词的词性，tag这一列表示NER的标注，sent_no这一列表示该单词在第几个句子中。</p>
+<p>数据探索
+  接着，第二步是数据探索，即对输入的数据（input_data）进行一些数据review，完整的代码（data_processing.py）如下:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span><span class="lnt">86
+</span><span class="lnt">87
+</span><span class="lnt">88
+</span><span class="lnt">89
+</span><span class="lnt">90
+</span><span class="lnt">91
+</span><span class="lnt">92
+</span><span class="lnt">93
+</span><span class="lnt">94
+</span><span class="lnt">95
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="c1"># -*- coding: utf-8 -*-</span>
+
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">accumulate</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">BASE_DIR</span><span class="p">,</span> <span class="n">CONSTANTS</span><span class="p">,</span> <span class="n">load_data</span>
+
+<span class="c1"># 设置matplotlib绘图时的字体</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;font.sans-serif&#39;</span><span class="p">]</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;SimHei&#39;</span><span class="p">]</span>
+
+<span class="c1"># 数据查看</span>
+<span class="k">def</span> <span class="nf">data_review</span><span class="p">():</span>
+
+    <span class="c1"># 数据导入</span>
+    <span class="n">input_data</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">()</span>
+
+    <span class="c1"># 基本的数据review</span>
+    <span class="n">sent_num</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">[</span><span class="s1">&#39;sent_no&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&#34;一共有</span><span class="si">%s</span><span class="s2">个句子。</span><span class="se">\n</span><span class="s2">&#34;</span><span class="o">%</span><span class="n">sent_num</span><span class="p">)</span>
+
+    <span class="n">vocabulary</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">[</span><span class="s1">&#39;word&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&#34;一共有</span><span class="si">%d</span><span class="s2">个单词。&#34;</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="n">vocabulary</span><span class="p">))</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&#34;前10个单词为：</span><span class="si">%s</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&#34;</span><span class="o">%</span><span class="n">vocabulary</span><span class="p">[:</span><span class="mi">11</span><span class="p">])</span>
+
+    <span class="n">pos_arr</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">[</span><span class="s1">&#39;pos&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&#34;单词的词性列表：</span><span class="si">%s</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&#34;</span><span class="o">%</span><span class="n">pos_arr</span><span class="p">)</span>
+
+    <span class="n">ner_tag_arr</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">[</span><span class="s1">&#39;tag&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&#34;NER的标注列表：</span><span class="si">%s</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&#34;</span> <span class="o">%</span> <span class="n">ner_tag_arr</span><span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">input_data</span><span class="p">[[</span><span class="s1">&#39;word&#39;</span><span class="p">,</span> <span class="s1">&#39;sent_no&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;sent_no&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+    <span class="n">sent_len_list</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;word&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&#34;句子长度及出现频数字典：</span><span class="se">\n</span><span class="si">%s</span><span class="s2">.&#34;</span> <span class="o">%</span> <span class="nb">dict</span><span class="p">(</span><span class="n">Counter</span><span class="p">(</span><span class="n">sent_len_list</span><span class="p">)))</span>
+
+    <span class="c1"># 绘制句子长度及出现频数统计图</span>
+    <span class="n">sort_sent_len_dist</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">Counter</span><span class="p">(</span><span class="n">sent_len_list</span><span class="p">))</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">sent_no_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sort_sent_len_dist</span><span class="p">]</span>
+    <span class="n">sent_count_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sort_sent_len_dist</span><span class="p">]</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">sent_no_data</span><span class="p">,</span> <span class="n">sent_count_data</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&#34;句子长度及出现频数统计图&#34;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&#34;句子长度&#34;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&#34;句子长度出现的频数&#34;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&#34;</span><span class="si">%s</span><span class="s2">/句子长度及出现频数统计图.png&#34;</span> <span class="o">%</span> <span class="n">BASE_DIR</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># 绘制句子长度累积分布函数(CDF)</span>
+    <span class="n">sent_pentage_list</span> <span class="o">=</span> <span class="p">[(</span><span class="n">count</span><span class="o">/</span><span class="n">sent_num</span><span class="p">)</span> <span class="k">for</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">accumulate</span><span class="p">(</span><span class="n">sent_count_data</span><span class="p">)]</span>
+
+    <span class="c1"># 寻找分位点为quantile的句子长度</span>
+    <span class="n">quantile</span> <span class="o">=</span> <span class="mf">0.9992</span>
+    <span class="c1">#print(list(sent_pentage_list))</span>
+    <span class="k">for</span> <span class="n">length</span><span class="p">,</span> <span class="n">per</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sent_no_data</span><span class="p">,</span> <span class="n">sent_pentage_list</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">round</span><span class="p">(</span><span class="n">per</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="o">==</span> <span class="n">quantile</span><span class="p">:</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">length</span>
+            <span class="k">break</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">分位点为</span><span class="si">%s</span><span class="s2">的句子长度:</span><span class="si">%d</span><span class="s2">.&#34;</span> <span class="o">%</span> <span class="p">(</span><span class="n">quantile</span><span class="p">,</span> <span class="n">index</span><span class="p">))</span>
+
+    <span class="c1"># 绘制CDF</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">sent_no_data</span><span class="p">,</span> <span class="n">sent_pentage_list</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">hlines</span><span class="p">(</span><span class="n">quantile</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s2">&#34;c&#34;</span><span class="p">,</span> <span class="n">linestyles</span><span class="o">=</span><span class="s2">&#34;dashed&#34;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">quantile</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="s2">&#34;c&#34;</span><span class="p">,</span> <span class="n">linestyles</span><span class="o">=</span><span class="s2">&#34;dashed&#34;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">quantile</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">quantile</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&#34;句子长度累积分布函数图&#34;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&#34;句子长度&#34;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&#34;句子长度累积频率&#34;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s2">&#34;</span><span class="si">%s</span><span class="s2">/句子长度累积分布函数图.png&#34;</span> <span class="o">%</span> <span class="n">BASE_DIR</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="c1"># 数据处理</span>
+<span class="k">def</span> <span class="nf">data_processing</span><span class="p">():</span>
+    <span class="c1"># 数据导入</span>
+    <span class="n">input_data</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">()</span>
+
+    <span class="c1"># 标签及词汇表</span>
+    <span class="n">labels</span><span class="p">,</span> <span class="n">vocabulary</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">input_data</span><span class="p">[</span><span class="s1">&#39;tag&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()),</span> <span class="nb">list</span><span class="p">(</span><span class="n">input_data</span><span class="p">[</span><span class="s1">&#39;word&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+
+    <span class="c1"># 字典列表</span>
+    <span class="n">word_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">word</span><span class="p">:</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vocabulary</span><span class="p">)}</span>
+    <span class="n">inverse_word_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span> <span class="n">word</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">word</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vocabulary</span><span class="p">)}</span>
+    <span class="n">label_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">label</span><span class="p">:</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">)}</span>
+    <span class="n">output_dictionary</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span> <span class="n">labels</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">)}</span>
+
+    <span class="n">dict_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">word_dictionary</span><span class="p">,</span> <span class="n">inverse_word_dictionary</span><span class="p">,</span><span class="n">label_dictionary</span><span class="p">,</span> <span class="n">output_dictionary</span><span class="p">]</span>
+
+    <span class="c1"># 保存为pickle形式</span>
+    <span class="k">for</span> <span class="n">dict_item</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">dict_list</span><span class="p">,</span> <span class="n">CONSTANTS</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">dict_item</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+<span class="c1">#data_review()</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>调用data_review()函数，输出的结果如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="err">一共有</span><span class="mi">13998</span><span class="err">个句子。</span>
+
+<span class="err">一共有</span><span class="mi">24339</span><span class="err">个单词。</span>
+<span class="err">前</span><span class="mi">10</span><span class="err">个单词为：</span><span class="p">[</span><span class="s1">&#39;played&#39;</span> <span class="s1">&#39;on&#39;</span> <span class="s1">&#39;Monday&#39;</span> <span class="s1">&#39;(&#39;</span> <span class="s1">&#39;home&#39;</span> <span class="s1">&#39;team&#39;</span> <span class="s1">&#39;in&#39;</span> <span class="s1">&#39;CAPS&#39;</span> <span class="s1">&#39;)&#39;</span> <span class="s1">&#39;:&#39;</span> <span class="s1">&#39;American&#39;</span><span class="p">]</span><span class="o">.</span>
+
+<span class="err">单词的词性列表：</span><span class="p">[</span><span class="s1">&#39;VBD&#39;</span> <span class="s1">&#39;IN&#39;</span> <span class="s1">&#39;NNP&#39;</span> <span class="s1">&#39;(&#39;</span> <span class="s1">&#39;NN&#39;</span> <span class="s1">&#39;)&#39;</span> <span class="s1">&#39;:&#39;</span> <span class="s1">&#39;CD&#39;</span> <span class="s1">&#39;VB&#39;</span> <span class="s1">&#39;TO&#39;</span> <span class="s1">&#39;NNS&#39;</span> <span class="s1">&#39;,&#39;</span> <span class="s1">&#39;VBP&#39;</span> <span class="s1">&#39;VBZ&#39;</span>
+ <span class="s1">&#39;.&#39;</span> <span class="s1">&#39;VBG&#39;</span> <span class="s1">&#39;PRP$&#39;</span> <span class="s1">&#39;JJ&#39;</span> <span class="s1">&#39;CC&#39;</span> <span class="s1">&#39;JJS&#39;</span> <span class="s1">&#39;RB&#39;</span> <span class="s1">&#39;DT&#39;</span> <span class="s1">&#39;VBN&#39;</span> <span class="s1">&#39;&#34;&#39;</span> <span class="s1">&#39;PRP&#39;</span> <span class="s1">&#39;WDT&#39;</span> <span class="s1">&#39;WRB&#39;</span>
+ <span class="s1">&#39;MD&#39;</span> <span class="s1">&#39;WP&#39;</span> <span class="s1">&#39;POS&#39;</span> <span class="s1">&#39;JJR&#39;</span> <span class="s1">&#39;WP$&#39;</span> <span class="s1">&#39;RP&#39;</span> <span class="s1">&#39;NNPS&#39;</span> <span class="s1">&#39;RBS&#39;</span> <span class="s1">&#39;FW&#39;</span> <span class="s1">&#39;$&#39;</span> <span class="s1">&#39;RBR&#39;</span> <span class="s1">&#39;EX&#39;</span> <span class="s2">&#34;&#39;&#39;&#34;</span>
+ <span class="s1">&#39;PDT&#39;</span> <span class="s1">&#39;UH&#39;</span> <span class="s1">&#39;SYM&#39;</span> <span class="s1">&#39;LS&#39;</span> <span class="s1">&#39;NN|SYM&#39;</span><span class="p">]</span><span class="o">.</span>
+
+<span class="n">NER的标注列表</span><span class="err">：</span><span class="p">[</span><span class="s1">&#39;O&#39;</span> <span class="s1">&#39;B-MISC&#39;</span> <span class="s1">&#39;I-MISC&#39;</span> <span class="s1">&#39;B-ORG&#39;</span> <span class="s1">&#39;I-ORG&#39;</span> <span class="s1">&#39;B-PER&#39;</span> <span class="s1">&#39;B-LOC&#39;</span> <span class="s1">&#39;I-PER&#39;</span> <span class="s1">&#39;I-LOC&#39;</span>
+ <span class="s1">&#39;sO&#39;</span><span class="p">]</span><span class="o">.</span>
+
+<span class="err">句子长度及出现频数字典：</span>
+<span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="mi">177</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="mi">1141</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="mi">620</span><span class="p">,</span> <span class="mi">4</span><span class="p">:</span> <span class="mi">794</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span> <span class="mi">769</span><span class="p">,</span> <span class="mi">6</span><span class="p">:</span> <span class="mi">639</span><span class="p">,</span> <span class="mi">7</span><span class="p">:</span> <span class="mi">999</span><span class="p">,</span> <span class="mi">8</span><span class="p">:</span> <span class="mi">977</span><span class="p">,</span> <span class="mi">9</span><span class="p">:</span> <span class="mi">841</span><span class="p">,</span> <span class="mi">10</span><span class="p">:</span> <span class="mi">501</span><span class="p">,</span> <span class="mi">11</span><span class="p">:</span> <span class="mi">395</span><span class="p">,</span> <span class="mi">12</span><span class="p">:</span> <span class="mi">316</span><span class="p">,</span> <span class="mi">13</span><span class="p">:</span> <span class="mi">339</span><span class="p">,</span> <span class="mi">14</span><span class="p">:</span> <span class="mi">291</span><span class="p">,</span> <span class="mi">15</span><span class="p">:</span> <span class="mi">275</span><span class="p">,</span> <span class="mi">16</span><span class="p">:</span> <span class="mi">225</span><span class="p">,</span> <span class="mi">17</span><span class="p">:</span> <span class="mi">229</span><span class="p">,</span> <span class="mi">18</span><span class="p">:</span> <span class="mi">212</span><span class="p">,</span> <span class="mi">19</span><span class="p">:</span> <span class="mi">197</span><span class="p">,</span> <span class="mi">20</span><span class="p">:</span> <span class="mi">221</span><span class="p">,</span> <span class="mi">21</span><span class="p">:</span> <span class="mi">228</span><span class="p">,</span> <span class="mi">22</span><span class="p">:</span> <span class="mi">221</span><span class="p">,</span> <span class="mi">23</span><span class="p">:</span> <span class="mi">230</span><span class="p">,</span> <span class="mi">24</span><span class="p">:</span> <span class="mi">210</span><span class="p">,</span> <span class="mi">25</span><span class="p">:</span> <span class="mi">207</span><span class="p">,</span> <span class="mi">26</span><span class="p">:</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">27</span><span class="p">:</span> <span class="mi">188</span><span class="p">,</span> <span class="mi">28</span><span class="p">:</span> <span class="mi">199</span><span class="p">,</span> <span class="mi">29</span><span class="p">:</span> <span class="mi">214</span><span class="p">,</span> <span class="mi">30</span><span class="p">:</span> <span class="mi">183</span><span class="p">,</span> <span class="mi">31</span><span class="p">:</span> <span class="mi">202</span><span class="p">,</span> <span class="mi">32</span><span class="p">:</span> <span class="mi">167</span><span class="p">,</span> <span class="mi">33</span><span class="p">:</span> <span class="mi">167</span><span class="p">,</span> <span class="mi">34</span><span class="p">:</span> <span class="mi">141</span><span class="p">,</span> <span class="mi">35</span><span class="p">:</span> <span class="mi">130</span><span class="p">,</span> <span class="mi">36</span><span class="p">:</span> <span class="mi">119</span><span class="p">,</span> <span class="mi">37</span><span class="p">:</span> <span class="mi">105</span><span class="p">,</span> <span class="mi">38</span><span class="p">:</span> <span class="mi">112</span><span class="p">,</span> <span class="mi">39</span><span class="p">:</span> <span class="mi">98</span><span class="p">,</span> <span class="mi">40</span><span class="p">:</span> <span class="mi">78</span><span class="p">,</span> <span class="mi">41</span><span class="p">:</span> <span class="mi">74</span><span class="p">,</span> <span class="mi">42</span><span class="p">:</span> <span class="mi">63</span><span class="p">,</span> <span class="mi">43</span><span class="p">:</span> <span class="mi">51</span><span class="p">,</span> <span class="mi">44</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">45</span><span class="p">:</span> <span class="mi">39</span><span class="p">,</span> <span class="mi">46</span><span class="p">:</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">47</span><span class="p">:</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">48</span><span class="p">:</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">49</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">50</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">51</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">52</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">53</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">54</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">55</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">56</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">57</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">58</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">59</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">60</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">62</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">66</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">67</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">69</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">71</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">72</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">78</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">80</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">113</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">124</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span><span class="o">.</span>
+
+<span class="err">分位点为</span><span class="mf">0.9992</span><span class="err">的句子长度</span><span class="p">:</span><span class="mf">60.</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>在该语料库中，一共有13998个句子，比预期的42000/3=14000个句子少两个。一个有24339个单词，单词量还是蛮大的，当然，这里对单词没有做任何处理，直接保留了语料库中的形式（后期可以继续优化）。单词的词性可以参考文章：NLP入门（三）词形还原（Lemmatization）。我们需要注意的是，NER的标注列表为[‘O’ ,‘B-MISC’, ‘I-MISC’, ‘B-ORG’ ,‘I-ORG’, ‘B-PER’ ,‘B-LOC’ ,‘I-PER’, ‘I-LOC’,‘sO’]，因此，本项目的NER一共分为四类：PER（人名），LOC（位置），ORG（组织）以及MISC，其中B表示开始，I表示中间，O表示单字词，不计入NER，sO表示特殊单字词。</p>
+<p>  接下来，让我们考虑下句子的长度，这对后面的建模时填充的句子长度有有参考作用。句子长度及出现频数的统计图如下：</p>
+<p><img src="media/15999981092661.jpg" alt=""></p>
+<p>可以看到，句子长度基本在60以下，当然，这也可以在输出的句子长度及出现频数字典中看到。那么，我们是否可以选在一个标准作为后面模型的句子填充的长度呢？答案是，利用出现频数的累计分布函数的分位点，在这里，我们选择分位点为0.9992,对应的句子长度为60，如下图：</p>
+<p><img src="media/15999981412332.jpg" alt=""></p>
+<p>  接着是数据处理函数data_processing()，它的功能主要是实现单词、标签字典，并保存为pickle文件形式，便于后续直接调用。</p>
+<h2 id="建模">建模</h2>
+<p>  在第三步中，我们建立Bi-LSTM模型来训练训练，完整的Python代码（Bi_LSTM_Model_training.py）如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">BASE_DIR</span><span class="p">,</span> <span class="n">CONSTANTS</span><span class="p">,</span> <span class="n">load_data</span>
+<span class="kn">from</span> <span class="nn">data_processing</span> <span class="kn">import</span> <span class="n">data_processing</span>
+<span class="kn">from</span> <span class="nn">keras.utils</span> <span class="kn">import</span> <span class="n">np_utils</span><span class="p">,</span> <span class="n">plot_model</span>
+<span class="kn">from</span> <span class="nn">keras.models</span> <span class="kn">import</span> <span class="n">Sequential</span>
+<span class="kn">from</span> <span class="nn">keras.preprocessing.sequence</span> <span class="kn">import</span> <span class="n">pad_sequences</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Bidirectional</span><span class="p">,</span> <span class="n">LSTM</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Embedding</span><span class="p">,</span> <span class="n">TimeDistributed</span>
+
+
+<span class="c1"># 模型输入数据</span>
+<span class="k">def</span> <span class="nf">input_data_for_model</span><span class="p">(</span><span class="n">input_shape</span><span class="p">):</span>
+
+    <span class="c1"># 数据导入</span>
+    <span class="n">input_data</span> <span class="o">=</span> <span class="n">load_data</span><span class="p">()</span>
+    <span class="c1"># 数据处理</span>
+    <span class="n">data_processing</span><span class="p">()</span>
+    <span class="c1"># 导入字典</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CONSTANTS</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">word_dictionary</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CONSTANTS</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">inverse_word_dictionary</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CONSTANTS</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">label_dictionary</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CONSTANTS</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">output_dictionary</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">vocab_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">word_dictionary</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">label_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">label_dictionary</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="c1"># 处理输入数据</span>
+    <span class="n">aggregate_function</span> <span class="o">=</span> <span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="p">[(</span><span class="n">word</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">word</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span>
+                                            <span class="nb">zip</span><span class="p">(</span><span class="nb">input</span><span class="p">[</span><span class="s1">&#39;word&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+                                                <span class="nb">input</span><span class="p">[</span><span class="s1">&#39;pos&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+                                                <span class="nb">input</span><span class="p">[</span><span class="s1">&#39;tag&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">())]</span>
+
+    <span class="n">grouped_input_data</span> <span class="o">=</span> <span class="n">input_data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;sent_no&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">aggregate_function</span><span class="p">)</span>
+    <span class="n">sentences</span> <span class="o">=</span> <span class="p">[</span><span class="n">sentence</span> <span class="k">for</span> <span class="n">sentence</span> <span class="ow">in</span> <span class="n">grouped_input_data</span><span class="p">]</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="p">[[</span><span class="n">word_dictionary</span><span class="p">[</span><span class="n">word</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">sent</span><span class="p">]</span> <span class="k">for</span> <span class="n">sent</span> <span class="ow">in</span> <span class="n">sentences</span><span class="p">]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">pad_sequences</span><span class="p">(</span><span class="n">maxlen</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">sequences</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="p">[[</span><span class="n">label_dictionary</span><span class="p">[</span><span class="n">word</span><span class="p">[</span><span class="mi">2</span><span class="p">]]</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">sent</span><span class="p">]</span> <span class="k">for</span> <span class="n">sent</span> <span class="ow">in</span> <span class="n">sentences</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">pad_sequences</span><span class="p">(</span><span class="n">maxlen</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">sequences</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="n">np_utils</span><span class="o">.</span><span class="n">to_categorical</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="n">label_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">y</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">output_dictionary</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">,</span> <span class="n">label_size</span><span class="p">,</span> <span class="n">inverse_word_dictionary</span>
+
+
+<span class="c1"># 定义深度学习模型：Bi-LSTM</span>
+<span class="k">def</span> <span class="nf">create_Bi_LSTM</span><span class="p">(</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">label_size</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">output_dim</span><span class="p">,</span> <span class="n">n_units</span><span class="p">,</span> <span class="n">out_act</span><span class="p">,</span> <span class="n">activation</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Embedding</span><span class="p">(</span><span class="n">input_dim</span><span class="o">=</span><span class="n">vocab_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">output_dim</span><span class="o">=</span><span class="n">output_dim</span><span class="p">,</span>
+                        <span class="n">input_length</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">mask_zero</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Bidirectional</span><span class="p">(</span><span class="n">LSTM</span><span class="p">(</span><span class="n">units</span><span class="o">=</span><span class="n">n_units</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
+                                 <span class="n">return_sequences</span><span class="o">=</span><span class="bp">True</span><span class="p">)))</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">TimeDistributed</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="n">label_size</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">out_act</span><span class="p">)))</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;adam&#39;</span><span class="p">,</span> <span class="n">loss</span><span class="o">=</span><span class="s1">&#39;categorical_crossentropy&#39;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">model</span>
+
+
+<span class="c1"># 模型训练</span>
+<span class="k">def</span> <span class="nf">model_train</span><span class="p">():</span>
+
+    <span class="c1"># 将数据集分为训练集和测试集，占比为9:1</span>
+    <span class="n">input_shape</span> <span class="o">=</span> <span class="mi">60</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">output_dictionary</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">,</span> <span class="n">label_size</span><span class="p">,</span> <span class="n">inverse_word_dictionary</span> <span class="o">=</span> <span class="n">input_data_for_model</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span>
+    <span class="n">train_end</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="mf">0.9</span><span class="p">)</span>
+    <span class="n">train_x</span><span class="p">,</span> <span class="n">train_y</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">train_end</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">train_end</span><span class="p">])</span>
+    <span class="n">test_x</span><span class="p">,</span> <span class="n">test_y</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">train_end</span><span class="p">:],</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">train_end</span><span class="p">:])</span>
+
+    <span class="c1"># 模型输入参数</span>
+    <span class="n">activation</span> <span class="o">=</span> <span class="s1">&#39;selu&#39;</span>
+    <span class="n">out_act</span> <span class="o">=</span> <span class="s1">&#39;softmax&#39;</span>
+    <span class="n">n_units</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">epochs</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">output_dim</span> <span class="o">=</span> <span class="mi">20</span>
+
+    <span class="c1"># 模型训练</span>
+    <span class="n">lstm_model</span> <span class="o">=</span> <span class="n">create_Bi_LSTM</span><span class="p">(</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">label_size</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">output_dim</span><span class="p">,</span> <span class="n">n_units</span><span class="p">,</span> <span class="n">out_act</span><span class="p">,</span> <span class="n">activation</span><span class="p">)</span>
+    <span class="n">lstm_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_x</span><span class="p">,</span> <span class="n">train_y</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># 模型保存</span>
+    <span class="n">model_save_path</span> <span class="o">=</span> <span class="n">CONSTANTS</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">lstm_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model_save_path</span><span class="p">)</span>
+    <span class="n">plot_model</span><span class="p">(</span><span class="n">lstm_model</span><span class="p">,</span> <span class="n">to_file</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/LSTM_model.png&#39;</span> <span class="o">%</span> <span class="n">BASE_DIR</span><span class="p">)</span>
+
+    <span class="c1"># 在测试集上的效果</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">test_x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># 测试的条数</span>
+    <span class="n">avg_accuracy</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># 预测的平均准确率</span>
+    <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)):</span>
+        <span class="n">sentence</span> <span class="o">=</span> <span class="p">[</span><span class="n">inverse_word_dictionary</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">test_x</span><span class="p">[</span><span class="n">start</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">y_predict</span> <span class="o">=</span> <span class="n">lstm_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_x</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
+        <span class="n">input_sequences</span><span class="p">,</span> <span class="n">output_sequences</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_predict</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+            <span class="n">output_sequences</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">y_predict</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]))</span>
+            <span class="n">input_sequences</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">test_y</span><span class="p">[</span><span class="n">start</span><span class="p">][</span><span class="n">i</span><span class="p">]))</span>
+
+        <span class="nb">eval</span> <span class="o">=</span> <span class="n">lstm_model</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">test_x</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">],</span> <span class="n">test_y</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Test Accuracy: loss = </span><span class="si">%0.6f</span><span class="s1"> accuracy = </span><span class="si">%0.2f%%</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">eval</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">eval</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">100</span><span class="p">))</span>
+        <span class="n">avg_accuracy</span> <span class="o">+=</span> <span class="nb">eval</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">output_sequences</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">output_dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">output_sequences</span> <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">input_sequences</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">output_dictionary</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">input_sequences</span> <span class="k">if</span> <span class="n">key</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">output_input_comparison</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">sentence</span><span class="p">,</span> <span class="n">output_sequences</span><span class="p">,</span> <span class="n">input_sequences</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">output_input_comparison</span><span class="o">.</span><span class="n">dropna</span><span class="p">())</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;#&#39;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
+
+    <span class="n">avg_accuracy</span> <span class="o">/=</span> <span class="n">N</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&#34;测试样本的平均预测准确率：</span><span class="si">%.2f%%</span><span class="s2">.&#34;</span> <span class="o">%</span> <span class="p">(</span><span class="n">avg_accuracy</span> <span class="o">*</span> <span class="mi">100</span><span class="p">))</span>
+
+<span class="n">model_train</span><span class="p">()</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>在上面的代码中，先是通过input_data_for_model()函数来处理好进入模型的数据，其参数为input_shape，即填充句子时的长度。然后是创建Bi-LSTM模型create_Bi_LSTM()，模型的示意图如下：</p>
+<p><img src="media/15999981954503.jpg" alt=""></p>
+<p>最后，是在输入的数据上进行模型训练，将原始的数据分为训练集和测试集，占比为9:1，训练的周期为10次。</p>
+<h2 id="模型训练">模型训练</h2>
+<p>  运行上述模型训练代码，一共训练10个周期，训练时间大概为500s，在训练集上的准确率达99%以上，在测试集上的平均准确率为95%以上。以下是最后几个测试集上的预测结果：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="o">......</span><span class="p">(</span><span class="err">前面的输出已忽略</span><span class="p">)</span>
+<span class="n">Test</span> <span class="n">Accuracy</span><span class="p">:</span> <span class="n">loss</span> <span class="o">=</span> <span class="mf">0.000986</span> <span class="n">accuracy</span> <span class="o">=</span> <span class="mf">100.00</span><span class="o">%</span>
+          <span class="mi">0</span>      <span class="mi">1</span>      <span class="mi">2</span>
+<span class="mi">0</span>   <span class="n">Cardiff</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>
+<span class="mi">1</span>         <span class="mi">1</span>      <span class="n">O</span>      <span class="n">O</span>
+<span class="mi">2</span>  <span class="n">Brighton</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>
+<span class="mi">3</span>         <span class="mi">0</span>      <span class="n">O</span>      <span class="n">O</span>
+<span class="c1">################################################################################</span>
+
+<span class="mi">1</span><span class="o">/</span><span class="mi">1</span> <span class="p">[</span><span class="o">==============================</span><span class="p">]</span> <span class="o">-</span> <span class="mi">0</span><span class="n">s</span> <span class="mi">10</span><span class="n">ms</span><span class="o">/</span><span class="n">step</span>
+<span class="n">Test</span> <span class="n">Accuracy</span><span class="p">:</span> <span class="n">loss</span> <span class="o">=</span> <span class="mf">0.000274</span> <span class="n">accuracy</span> <span class="o">=</span> <span class="mf">100.00</span><span class="o">%</span>
+          <span class="mi">0</span>      <span class="mi">1</span>      <span class="mi">2</span>
+<span class="mi">0</span>  <span class="n">Carlisle</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>
+<span class="mi">1</span>         <span class="mi">0</span>      <span class="n">O</span>      <span class="n">O</span>
+<span class="mi">2</span>      <span class="n">Hull</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>
+<span class="mi">3</span>         <span class="mi">0</span>      <span class="n">O</span>      <span class="n">O</span>
+<span class="c1">################################################################################</span>
+
+<span class="mi">1</span><span class="o">/</span><span class="mi">1</span> <span class="p">[</span><span class="o">==============================</span><span class="p">]</span> <span class="o">-</span> <span class="mi">0</span><span class="n">s</span> <span class="mi">9</span><span class="n">ms</span><span class="o">/</span><span class="n">step</span>
+<span class="n">Test</span> <span class="n">Accuracy</span><span class="p">:</span> <span class="n">loss</span> <span class="o">=</span> <span class="mf">0.000479</span> <span class="n">accuracy</span> <span class="o">=</span> <span class="mf">100.00</span><span class="o">%</span>
+           <span class="mi">0</span>      <span class="mi">1</span>      <span class="mi">2</span>
+<span class="mi">0</span>    <span class="n">Chester</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>
+<span class="mi">1</span>          <span class="mi">1</span>      <span class="n">O</span>      <span class="n">O</span>
+<span class="mi">2</span>  <span class="n">Cambridge</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>
+<span class="mi">3</span>          <span class="mi">1</span>      <span class="n">O</span>      <span class="n">O</span>
+<span class="c1">################################################################################</span>
+
+<span class="mi">1</span><span class="o">/</span><span class="mi">1</span> <span class="p">[</span><span class="o">==============================</span><span class="p">]</span> <span class="o">-</span> <span class="mi">0</span><span class="n">s</span> <span class="mi">9</span><span class="n">ms</span><span class="o">/</span><span class="n">step</span>
+<span class="n">Test</span> <span class="n">Accuracy</span><span class="p">:</span> <span class="n">loss</span> <span class="o">=</span> <span class="mf">0.003092</span> <span class="n">accuracy</span> <span class="o">=</span> <span class="mf">100.00</span><span class="o">%</span>
+            <span class="mi">0</span>      <span class="mi">1</span>      <span class="mi">2</span>
+<span class="mi">0</span>  <span class="n">Darlington</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>
+<span class="mi">1</span>           <span class="mi">4</span>      <span class="n">O</span>      <span class="n">O</span>
+<span class="mi">2</span>     <span class="n">Swansea</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>
+<span class="mi">3</span>           <span class="mi">1</span>      <span class="n">O</span>      <span class="n">O</span>
+<span class="c1">################################################################################</span>
+
+<span class="mi">1</span><span class="o">/</span><span class="mi">1</span> <span class="p">[</span><span class="o">==============================</span><span class="p">]</span> <span class="o">-</span> <span class="mi">0</span><span class="n">s</span> <span class="mi">8</span><span class="n">ms</span><span class="o">/</span><span class="n">step</span>
+<span class="n">Test</span> <span class="n">Accuracy</span><span class="p">:</span> <span class="n">loss</span> <span class="o">=</span> <span class="mf">0.000705</span> <span class="n">accuracy</span> <span class="o">=</span> <span class="mf">100.00</span><span class="o">%</span>
+             <span class="mi">0</span>      <span class="mi">1</span>      <span class="mi">2</span>
+<span class="mi">0</span>       <span class="n">Exeter</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>
+<span class="mi">1</span>            <span class="mi">2</span>      <span class="n">O</span>      <span class="n">O</span>
+<span class="mi">2</span>  <span class="n">Scarborough</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>  <span class="n">B</span><span class="o">-</span><span class="n">ORG</span>
+<span class="mi">3</span>            <span class="mi">2</span>      <span class="n">O</span>      <span class="n">O</span>
+<span class="c1">################################################################################</span>
+<span class="err">测试样本的平均预测准确率：</span><span class="mf">95.55</span><span class="o">%.</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>该模型在原始数据上的识别效果还是可以的。
+  训练完模型后，BASE_DIR中的所有文件如下：
+  <img src="media/15999982578568.jpg" alt=""></p>
+<h2 id="模型预测">模型预测</h2>
+<p>  最后，也许是整个项目最为激动人心的时刻，因为，我们要在新数据集上测试模型的识别效果。预测新数据的识别结果的完整Python代码（Bi_LSTM_Model_predict.py）如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># Name entity recognition for new data</span>
+
+<span class="c1"># Import the necessary modules</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">utils</span> <span class="kn">import</span> <span class="n">CONSTANTS</span>
+<span class="kn">from</span> <span class="nn">keras.preprocessing.sequence</span> <span class="kn">import</span> <span class="n">pad_sequences</span>
+<span class="kn">from</span> <span class="nn">keras.models</span> <span class="kn">import</span> <span class="n">load_model</span>
+<span class="kn">from</span> <span class="nn">nltk</span> <span class="kn">import</span> <span class="n">word_tokenize</span>
+
+<span class="c1"># 导入字典</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CONSTANTS</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">word_dictionary</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">CONSTANTS</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">output_dictionary</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># 数据预处理</span>
+    <span class="n">input_shape</span> <span class="o">=</span> <span class="mi">60</span>
+    <span class="n">sent</span> <span class="o">=</span> <span class="s1">&#39;New York is the biggest city in America.&#39;</span>
+    <span class="n">new_sent</span> <span class="o">=</span> <span class="n">word_tokenize</span><span class="p">(</span><span class="n">sent</span><span class="p">)</span>
+    <span class="n">new_x</span> <span class="o">=</span> <span class="p">[[</span><span class="n">word_dictionary</span><span class="p">[</span><span class="n">word</span><span class="p">]</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">new_sent</span><span class="p">]]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">pad_sequences</span><span class="p">(</span><span class="n">maxlen</span><span class="o">=</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">sequences</span><span class="o">=</span><span class="n">new_x</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># 载入模型</span>
+    <span class="n">model_save_path</span> <span class="o">=</span> <span class="n">CONSTANTS</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">lstm_model</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">(</span><span class="n">model_save_path</span><span class="p">)</span>
+
+    <span class="c1"># 模型预测</span>
+    <span class="n">y_predict</span> <span class="o">=</span> <span class="n">lstm_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="n">ner_tag</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_sent</span><span class="p">)):</span>
+        <span class="n">ner_tag</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">y_predict</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]))</span>
+
+    <span class="n">ner</span> <span class="o">=</span> <span class="p">[</span><span class="n">output_dictionary</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ner_tag</span><span class="p">]</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">new_sent</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">ner</span><span class="p">)</span>
+
+    <span class="c1"># 去掉NER标注为O的元素</span>
+    <span class="n">ner_reg_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">word</span><span class="p">,</span> <span class="n">tag</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">new_sent</span><span class="p">,</span> <span class="n">ner</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">tag</span> <span class="o">!=</span> <span class="s1">&#39;O&#39;</span><span class="p">:</span>
+            <span class="n">ner_reg_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">word</span><span class="p">,</span> <span class="n">tag</span><span class="p">))</span>
+
+    <span class="c1"># 输出模型的NER识别结果</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&#34;NER识别结果：&#34;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ner_reg_list</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ner_reg_list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;B&#39;</span><span class="p">):</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+                <span class="k">while</span> <span class="n">end</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ner_reg_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">ner_reg_list</span><span class="p">[</span><span class="n">end</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">):</span>
+                    <span class="n">end</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="n">ner_type</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">ner_type_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;PER&#39;</span><span class="p">:</span> <span class="s1">&#39;PERSON: &#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;LOC&#39;</span><span class="p">:</span> <span class="s1">&#39;LOCATION: &#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;ORG&#39;</span><span class="p">:</span> <span class="s1">&#39;ORGANIZATION: &#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;MISC&#39;</span><span class="p">:</span> <span class="s1">&#39;MISC: &#39;</span>
+                                <span class="p">}</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">ner_type_dict</span><span class="p">[</span><span class="n">ner_type</span><span class="p">],</span>\
+                    <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">ner_reg_list</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">end</span><span class="p">]]))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&#34;模型并未识别任何有效命名实体。&#34;</span><span class="p">)</span>
+
+<span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&#34;您输入的句子有单词不在词汇表中，请重新输入！&#34;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&#34;不在词汇表中的单词为：</span><span class="si">%s</span><span class="s2">.&#34;</span> <span class="o">%</span> <span class="n">err</span><span class="p">)</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>输出结果为：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="p">[</span><span class="s1">&#39;New&#39;</span><span class="p">,</span> <span class="s1">&#39;York&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;biggest&#39;</span><span class="p">,</span> <span class="s1">&#39;city&#39;</span><span class="p">,</span> <span class="s1">&#39;in&#39;</span><span class="p">,</span> <span class="s1">&#39;America&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">&#39;B-LOC&#39;</span><span class="p">,</span> <span class="s1">&#39;I-LOC&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;B-LOC&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">]</span>
+<span class="n">NER识别结果</span><span class="err">：</span>
+<span class="n">LOCATION</span><span class="p">:</span>  <span class="n">New</span> <span class="n">York</span>
+<span class="n">LOCATION</span><span class="p">:</span>  <span class="n">America</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>  接下来，再测试三个笔者自己想的句子：</p>
+<p>输入为：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="n">sent</span> <span class="o">=</span> <span class="s1">&#39;James is a world famous actor, whose home is in London.&#39;</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>输出结果为：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="p">[</span><span class="s1">&#39;James&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;world&#39;</span><span class="p">,</span> <span class="s1">&#39;famous&#39;</span><span class="p">,</span> <span class="s1">&#39;actor&#39;</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;whose&#39;</span><span class="p">,</span> <span class="s1">&#39;home&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;in&#39;</span><span class="p">,</span> <span class="s1">&#39;London&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">&#39;B-PER&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;B-LOC&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">]</span>
+<span class="n">NER识别结果</span><span class="err">：</span>
+<span class="n">PERSON</span><span class="p">:</span>  <span class="n">James</span>
+<span class="n">LOCATION</span><span class="p">:</span>  <span class="n">London</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>输入为：
+sent = &lsquo;Oxford is in England, Jack is from here.&rsquo;</p>
+<p>输出为：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="p">[</span><span class="s1">&#39;Oxford&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;in&#39;</span><span class="p">,</span> <span class="s1">&#39;England&#39;</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;Jack&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;from&#39;</span><span class="p">,</span> <span class="s1">&#39;here&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">&#39;B-PER&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;B-LOC&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;B-PER&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">]</span>
+<span class="n">NER识别结果</span><span class="err">：</span>
+<span class="n">PERSON</span><span class="p">:</span>  <span class="n">Oxford</span>
+<span class="n">LOCATION</span><span class="p">:</span>  <span class="n">England</span>
+<span class="n">PERSON</span><span class="p">:</span>  <span class="n">Jack</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>输入为：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="n">sent</span> <span class="o">=</span> <span class="s1">&#39;I love Shanghai.&#39;</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>输出为：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;love&#39;</span><span class="p">,</span> <span class="s1">&#39;Shanghai&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;B-LOC&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">]</span>
+<span class="n">NER识别结果</span><span class="err">：</span>
+<span class="n">LOCATION</span><span class="p">:</span>  <span class="n">Shanghai</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>在上面的例子中，只有Oxford的识别效果不理想，模型将它识别为PERSON，其实应该是ORGANIZATION。</p>
+<p>  接下来是三个来自CNN和wikipedia的句子：</p>
+<p>输入为：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="n">sent</span> <span class="o">=</span> <span class="s2">&#34;the US runs the risk of a military defeat by China or Russia&#34;</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>输出为：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="p">[</span><span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;US&#39;</span><span class="p">,</span> <span class="s1">&#39;runs&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;risk&#39;</span><span class="p">,</span> <span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;military&#39;</span><span class="p">,</span> <span class="s1">&#39;defeat&#39;</span><span class="p">,</span> <span class="s1">&#39;by&#39;</span><span class="p">,</span> <span class="s1">&#39;China&#39;</span><span class="p">,</span> <span class="s1">&#39;or&#39;</span><span class="p">,</span> <span class="s1">&#39;Russia&#39;</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;B-LOC&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;B-LOC&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;B-LOC&#39;</span><span class="p">]</span>
+<span class="n">NER识别结果</span><span class="err">：</span>
+<span class="n">LOCATION</span><span class="p">:</span>  <span class="n">US</span>
+<span class="n">LOCATION</span><span class="p">:</span>  <span class="n">China</span>
+<span class="n">LOCATION</span><span class="p">:</span>  <span class="n">Russia</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>输入为：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="n">sent</span> <span class="o">=</span> <span class="s2">&#34;Home to the headquarters of the United Nations, New York is an important center for international diplomacy.&#34;</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>输出为：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="p">[</span><span class="s1">&#39;Home&#39;</span><span class="p">,</span> <span class="s1">&#39;to&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;headquarters&#39;</span><span class="p">,</span> <span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;United&#39;</span><span class="p">,</span> <span class="s1">&#39;Nations&#39;</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;New&#39;</span><span class="p">,</span> <span class="s1">&#39;York&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;an&#39;</span><span class="p">,</span> <span class="s1">&#39;important&#39;</span><span class="p">,</span> <span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="s1">&#39;for&#39;</span><span class="p">,</span> <span class="s1">&#39;international&#39;</span><span class="p">,</span> <span class="s1">&#39;diplomacy&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;B-ORG&#39;</span><span class="p">,</span> <span class="s1">&#39;I-ORG&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;B-LOC&#39;</span><span class="p">,</span> <span class="s1">&#39;I-LOC&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">]</span>
+<span class="n">NER识别结果</span><span class="err">：</span>
+<span class="n">ORGANIZATION</span><span class="p">:</span>  <span class="n">United</span> <span class="n">Nations</span>
+<span class="n">LOCATION</span><span class="p">:</span>  <span class="n">New</span> <span class="n">York</span>
+
+</code></pre></td></tr></table>
+</div>
+</div><p>输入为：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="n">sent</span> <span class="o">=</span> <span class="s2">&#34;The United States is a founding member of the United Nations, World Bank, International Monetary Fund.&#34;</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>输出为:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-python" data-lang="python"><span class="p">[</span><span class="s1">&#39;The&#39;</span><span class="p">,</span> <span class="s1">&#39;United&#39;</span><span class="p">,</span> <span class="s1">&#39;States&#39;</span><span class="p">,</span> <span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;founding&#39;</span><span class="p">,</span> <span class="s1">&#39;member&#39;</span><span class="p">,</span> <span class="s1">&#39;of&#39;</span><span class="p">,</span> <span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;United&#39;</span><span class="p">,</span> <span class="s1">&#39;Nations&#39;</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;World&#39;</span><span class="p">,</span> <span class="s1">&#39;Bank&#39;</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;International&#39;</span><span class="p">,</span> <span class="s1">&#39;Monetary&#39;</span><span class="p">,</span> <span class="s1">&#39;Fund&#39;</span><span class="p">,</span> <span class="s1">&#39;.&#39;</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;B-LOC&#39;</span><span class="p">,</span> <span class="s1">&#39;I-LOC&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;B-ORG&#39;</span><span class="p">,</span> <span class="s1">&#39;I-ORG&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;B-ORG&#39;</span><span class="p">,</span> <span class="s1">&#39;I-ORG&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">,</span> <span class="s1">&#39;B-ORG&#39;</span><span class="p">,</span> <span class="s1">&#39;I-ORG&#39;</span><span class="p">,</span> <span class="s1">&#39;I-ORG&#39;</span><span class="p">,</span> <span class="s1">&#39;O&#39;</span><span class="p">]</span>
+<span class="n">NER识别结果</span><span class="err">：</span>
+<span class="n">LOCATION</span><span class="p">:</span>  <span class="n">United</span> <span class="n">States</span>
+<span class="n">ORGANIZATION</span><span class="p">:</span>  <span class="n">United</span> <span class="n">Nations</span>
+<span class="n">ORGANIZATION</span><span class="p">:</span>  <span class="n">World</span> <span class="n">Bank</span>
+<span class="n">ORGANIZATION</span><span class="p">:</span>  <span class="n">International</span> <span class="n">Monetary</span> <span class="n">Fund</span>
+</code></pre></td></tr></table>
+</div>
+</div><p>  这三个例子识别全部正确。</p>
+<p>总结
+  到这儿，笔者的这个项目就差不多了。我们有必要对这个项目做个总结。
+  首先是这个项目的优点。它的优点在于能够让你一步步地实现NER，而且除了语料库，你基本熟悉了如何创建一个识别NER系统的步骤，同时，对深度学习模型及其应用也有了深刻理解。因此，好处是显而易见的。当然，在实际工作中，语料库的整理才是最耗费时间的，能够占到90%或者更多的时间，因此，有一个好的语料库你才能展开工作。
+  接着讲讲这个项目的缺点。第一个，是语料库不够大，当然，约14000条句子也够了，但本项目没有对句子进行文本预处理，所以，有些单词的变形可能无法进入词汇表。第二个，缺少对新词的处理，一旦句子中出现一个新的单词，这个模型便无法处理，这是后期需要完善的地方。第三个，句子的填充长度为60，如果输入的句子长度大于60，则后面的部分将无法有效识别。
+  因此，后续还有更多的工作需要去做，当然，做一个中文NER也是可以考虑的。
+  本项目已上传Github,地址为 <a href="https://github.com/percent4/DL_4_NER">https://github.com/percent4/DL_4_NER</a></p>
+<p>##参考文献
+BOOK： Applied Natural Language Processing with Python， Taweh Beysolow II
+WEBSITE：https://github.com/Apress/applied-natural-language-processing-w-python
+WEBSITE: NLP入门（四）命名实体识别（NER）: <a href="https://www.jianshu.com/p/16e1f6a7aaef">https://www.jianshu.com/p/16e1f6a7aaef</a></p>
+
+    </div>
+
+    <div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">glin</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">
+        2020-09-08 01:37
+        
+    </span>
+  </p>
+  
+  
+</div>
+<div class="post-reward">
+  <input type="checkbox" name="reward" id="reward" hidden />
+  <label class="reward-button" for="reward">赞赏支持</label>
+  <div class="qr-code">
+    
+    <label class="qr-code-image" for="reward">
+        <img class="image" src="/images/wx.png">
+        <span>微信打赏</span>
+      </label>
+    <label class="qr-code-image" for="reward">
+        <img class="image" src="/images/zfb.png">
+        <span>支付宝打赏</span>
+      </label>
+  </div>
+</div><footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/%E7%AE%97%E6%B3%95/">算法</a>
+          <a href="/tags/%E5%9F%BA%E7%A1%80/">基础</a>
+          <a href="/tags/NLP/">NLP</a>
+          </div>
+      <nav class="post-nav">
+        <a class="prev" href="/post/nlp/NLP%E5%85%A5%E9%97%A8%E4%BA%8C%E6%8E%A2%E7%A9%B6TF-IDF%E7%9A%84%E5%8E%9F%E7%90%86/">
+            <i class="iconfont icon-left"></i>
+            <span class="prev-text nav-default">NLP入门（二）探究TF-IDF的原理</span>
+            <span class="prev-text nav-mobile">上一篇</span>
+          </a>
+        <a class="next" href="/post/nlp/NLP%E5%85%A5%E9%97%A8%E5%9B%9B%E5%91%BD%E5%90%8D%E5%AE%9E%E4%BD%93%E8%AF%86%E5%88%ABNER/">
+            <span class="next-text nav-default">NLP入门（四）命名实体识别（NER）</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+
+  
+
+  
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="http://www.cnblogs.com/wcwen1990" class="iconfont icon-cnblogs" title="cnblogs"></a>
+      <a href="mailto:glin1696@gmail.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/glinit" class="iconfont icon-github" title="github"></a>
+  <a href="https://glinit.github.io/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://gohugo.io">Hugo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/olOwOlo/hugo-theme-even">Even</a>
+  </span>
+
+  <div class="busuanzi-footer">
+    <span id="busuanzi_container_site_pv"> 本站总访问量 <span id="busuanzi_value_site_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次 </span>
+      <span class="division">|</span>
+    <span id="busuanzi_container_site_uv"> 本站总访客数 <span id="busuanzi_value_site_uv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 人 </span>
+  </div>
+
+  <span class="copyright-year">
+    &copy; 
+    2020
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">GlinIt</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+
+
+
+<script type="text/javascript" src="/js/main.min.d7b7ada643c9c1a983026e177f141f7363b4640d619caf01d8831a6718cd44ea.js"></script>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-138883536-1', 'auto');
+	ga('set', 'anonymizeIp', true);
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+</body>
+</html>

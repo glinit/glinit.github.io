@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>关于编辑距离的应用方案-- - glinit</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="glin" /><meta name="description" content="在进行搜索的时候会涉及到一些NLP相关的技术实现，其中搜索词改错与搜索词改写就是一个非常重要的流程，在这里介绍一种基于前缀树的搜索词改写的实" /><meta name="keywords" content="data warehouse, Github, flink, java, spark, ETL" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.69.2 with theme even" />
+
+
+<link rel="canonical" href="https://glinit.github.io/post/nlp/%E5%85%B3%E4%BA%8E%E7%BC%96%E8%BE%91%E8%B7%9D%E7%A6%BB%E7%9A%84%E5%BA%94%E7%94%A8%E6%96%B9%E6%A1%88-%E5%8D%95%E8%AF%8D%E6%88%96%E4%B8%93%E5%B1%9E%E5%90%8D%E8%AF%8D%E6%8B%BC%E5%86%99%E6%A3%80%E6%9F%A5%E7%AE%97%E6%B3%95java%E5%AE%9E%E7%8E%B0/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<link href="/sass/main.min.651e6917abb0239242daa570c2bec9867267bbcd83646da5a850afe573347b44.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+<link rel="stylesheet" href="/css/reset-even.css">
+
+
+<meta property="og:title" content="关于编辑距离的应用方案--" />
+<meta property="og:description" content="在进行搜索的时候会涉及到一些NLP相关的技术实现，其中搜索词改错与搜索词改写就是一个非常重要的流程，在这里介绍一种基于前缀树的搜索词改写的实" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://glinit.github.io/post/nlp/%E5%85%B3%E4%BA%8E%E7%BC%96%E8%BE%91%E8%B7%9D%E7%A6%BB%E7%9A%84%E5%BA%94%E7%94%A8%E6%96%B9%E6%A1%88-%E5%8D%95%E8%AF%8D%E6%88%96%E4%B8%93%E5%B1%9E%E5%90%8D%E8%AF%8D%E6%8B%BC%E5%86%99%E6%A3%80%E6%9F%A5%E7%AE%97%E6%B3%95java%E5%AE%9E%E7%8E%B0/" />
+<meta property="article:published_time" content="2020-10-09T01:37:56+08:00" />
+<meta property="article:modified_time" content="2020-10-09T01:37:56+08:00" />
+<meta itemprop="name" content="关于编辑距离的应用方案--">
+<meta itemprop="description" content="在进行搜索的时候会涉及到一些NLP相关的技术实现，其中搜索词改错与搜索词改写就是一个非常重要的流程，在这里介绍一种基于前缀树的搜索词改写的实">
+<meta itemprop="datePublished" content="2020-10-09T01:37:56&#43;08:00" />
+<meta itemprop="dateModified" content="2020-10-09T01:37:56&#43;08:00" />
+<meta itemprop="wordCount" content="1028">
+
+
+
+<meta itemprop="keywords" content="算法,NLP," /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="关于编辑距离的应用方案--"/>
+<meta name="twitter:description" content="在进行搜索的时候会涉及到一些NLP相关的技术实现，其中搜索词改错与搜索词改写就是一个非常重要的流程，在这里介绍一种基于前缀树的搜索词改写的实"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">glinit</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">首页</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">归档</li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">关于我</li>
+      </a>
+  </ul>
+</nav>
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">glinit</a>
+</div>
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">首页</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">归档</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/categories/">分类</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">标签</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">关于我</a>
+      </li>
+  </ul>
+</nav>
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">关于编辑距离的应用方案--</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2020-10-09 01:37 </span>
+        <div class="post-category">
+            <a href="/categories/%E7%AE%97%E6%B3%95/"> 算法 </a>
+            <a href="/categories/NLP/"> NLP </a>
+            </div>
+          <span class="more-meta"> 约 1028 字 </span>
+          <span class="more-meta"> 预计阅读 3 分钟 </span>
+        <span id="busuanzi_container_page_pv" class="more-meta"> <span id="busuanzi_value_page_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次阅读 </span>
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">文章目录</h2>
+  <div class="post-toc-content">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#相关理论支撑">相关理论支撑</a></li>
+    <li><a href="#本文基于这一原理的基础上使用java实现">本文基于这一原理的基础上使用java实现</a>
+      <ul>
+        <li><a href="#话不多说直接上代码">话不多说直接上代码</a></li>
+        <li><a href="#效果查看">效果查看</a></li>
+        <li><a href="#优化点">优化点</a></li>
+      </ul>
+    </li>
+    <li><a href="#以上的纠错与扩词只是一个初步实现以后有时间将系统的实现一个搜索流程敬请期待">以上的纠错与扩词只是一个初步实现，以后有时间将系统的实现一个搜索流程，敬请期待！！</a></li>
+  </ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <hr>
+<p>在进行搜索的时候会涉及到一些NLP相关的技术实现，其中搜索词改错与搜索词改写就是一个非常重要的流程，在这里介绍一种基于前缀树的搜索词改写的实现方案，由于公司的使用场景是垂直领域的搜索，涉及到的搜索词大多数都是楼盘相关，所以本文主要使用该算法实现搜索词的改错与扩词。</p>
+<h2 id="相关理论支撑">相关理论支撑</h2>
+<p>拼写纠错工业级别的实现非常复杂，但是简单一些的拼写纠错也能得到80%-90%的正确性，一位大牛黄振就实现了这一算法。具体实现参考黄振大神的实现（How to Write a Spelling Corrector）
+<a href="http://norvig.com/spell-correct.html">参考链接</a></p>
+<h2 id="本文基于这一原理的基础上使用java实现">本文基于这一原理的基础上使用java实现</h2>
+<h3 id="话不多说直接上代码">话不多说直接上代码</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-java" data-lang="java"><span class="c1">//构建前缀树
+</span><span class="c1"></span>
+<span class="kn">package</span> <span class="nn">com.pcauto.utils.bkutils</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.util.*</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">BKTreeAlgo</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">radius</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="n">Node</span> <span class="n">root</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">Metric</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">metric</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">BKTreeAlgo</span><span class="o">(</span><span class="kt">int</span> <span class="n">radius</span><span class="o">,</span> <span class="n">Metric</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">metric</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">radius</span> <span class="o">=</span> <span class="n">radius</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">metric</span> <span class="o">=</span> <span class="n">metric</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">add</span><span class="o">(</span><span class="n">T</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">root</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Node</span><span class="o">(</span><span class="n">value</span><span class="o">);</span>
+        <span class="k">else</span> <span class="o">{</span>
+            <span class="n">root</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">value</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">addAll</span><span class="o">(</span><span class="n">Collection</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="n">T</span><span class="o">&gt;</span> <span class="n">collection</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">for</span> <span class="o">(</span><span class="n">T</span> <span class="n">val</span> <span class="o">:</span> <span class="n">collection</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">add</span><span class="o">(</span><span class="n">val</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">Set</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="nf">search</span><span class="o">(</span><span class="n">T</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">Set</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;&gt;();</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">root</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
+            <span class="n">root</span><span class="o">.</span><span class="na">search</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="n">result</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">class</span> <span class="nc">Node</span> <span class="o">{</span>
+        <span class="kd">private</span> <span class="n">T</span> <span class="n">value</span><span class="o">;</span>
+        <span class="kd">private</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">Node</span><span class="o">&gt;</span> <span class="n">childs</span><span class="o">;</span>
+
+        <span class="n">Node</span><span class="o">(</span><span class="n">T</span> <span class="n">v</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">v</span><span class="o">;</span>
+            <span class="k">this</span><span class="o">.</span><span class="na">childs</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">Node</span><span class="o">&gt;();</span>
+        <span class="o">}</span>
+
+        <span class="kt">void</span> <span class="nf">add</span><span class="o">(</span><span class="n">T</span> <span class="n">value</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kt">int</span> <span class="n">distance</span> <span class="o">=</span> <span class="n">metric</span><span class="o">.</span><span class="na">getMetric</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">value</span><span class="o">,</span> <span class="n">value</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">childs</span><span class="o">.</span><span class="na">containsKey</span><span class="o">(</span><span class="n">distance</span><span class="o">))</span> <span class="o">{</span>
+                <span class="k">this</span><span class="o">.</span><span class="na">childs</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">distance</span><span class="o">).</span><span class="na">add</span><span class="o">(</span><span class="n">value</span><span class="o">);</span>
+            <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                <span class="k">this</span><span class="o">.</span><span class="na">childs</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">distance</span><span class="o">,</span> <span class="k">new</span> <span class="n">Node</span><span class="o">(</span><span class="n">value</span><span class="o">));</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+        <span class="kt">void</span> <span class="nf">search</span><span class="o">(</span><span class="n">T</span> <span class="n">value</span><span class="o">,</span> <span class="n">Set</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">resultSet</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kt">int</span> <span class="n">distance</span> <span class="o">=</span> <span class="n">BKTreeAlgo</span><span class="o">.</span><span class="na">this</span><span class="o">.</span><span class="na">metric</span><span class="o">.</span><span class="na">getMetric</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">value</span><span class="o">,</span> <span class="n">value</span><span class="o">);</span>
+
+            <span class="k">if</span> <span class="o">(</span><span class="n">distance</span> <span class="o">&lt;=</span> <span class="n">radius</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">resultSet</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">value</span><span class="o">);</span>
+            <span class="o">}</span>
+
+            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">Math</span><span class="o">.</span><span class="na">max</span><span class="o">(</span><span class="n">distance</span> <span class="o">-</span> <span class="n">radius</span><span class="o">,</span> <span class="n">1</span><span class="o">);</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">distance</span> <span class="o">+</span> <span class="n">radius</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+                <span class="n">Node</span> <span class="n">ch</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">childs</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">ch</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
+                    <span class="n">ch</span><span class="o">.</span><span class="na">search</span><span class="o">(</span><span class="n">value</span><span class="o">,</span> <span class="n">resultSet</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+</code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-java" data-lang="java">
+<span class="kn">package</span> <span class="nn">com.pcauto.utils.bkutils</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Metric</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="kt">int</span> <span class="nf">getMetric</span><span class="o">(</span><span class="n">T</span> <span class="n">t1</span><span class="o">,</span> <span class="n">T</span> <span class="n">t2</span><span class="o">);</span>
+<span class="o">}</span>
+
+
+
+<span class="kn">package</span> <span class="nn">com.pcauto.utils.bkutils</span><span class="o">;</span>
+
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">StringEditMetric</span> <span class="kd">implements</span> <span class="n">Metric</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getMetric</span><span class="o">(</span><span class="n">String</span> <span class="n">s1</span><span class="o">,</span> <span class="n">String</span> <span class="n">s2</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kt">int</span><span class="o">[][]</span> <span class="n">dp</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="n">s1</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">+</span> <span class="n">1</span><span class="o">][</span><span class="n">s2</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">+</span> <span class="n">1</span><span class="o">];</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">1</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">s1</span><span class="o">.</span><span class="na">length</span><span class="o">();</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+            <span class="n">dp</span><span class="o">[</span><span class="n">i</span><span class="o">][</span><span class="n">0</span><span class="o">]</span> <span class="o">=</span> <span class="n">i</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">1</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">s2</span><span class="o">.</span><span class="na">length</span><span class="o">();</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+            <span class="n">dp</span><span class="o">[</span><span class="n">0</span><span class="o">][</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">i</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">1</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">s1</span><span class="o">.</span><span class="na">length</span><span class="o">();</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="n">1</span><span class="o">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">s2</span><span class="o">.</span><span class="na">length</span><span class="o">();</span> <span class="n">j</span><span class="o">++)</span> <span class="o">{</span>
+                <span class="n">dp</span><span class="o">[</span><span class="n">i</span><span class="o">][</span><span class="n">j</span><span class="o">]</span> <span class="o">=</span> <span class="n">Math</span><span class="o">.</span><span class="na">min</span><span class="o">(</span>
+                        <span class="n">dp</span><span class="o">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">1</span><span class="o">][</span><span class="n">j</span> <span class="o">-</span> <span class="n">1</span><span class="o">]</span> <span class="o">+</span> <span class="o">(</span><span class="n">s1</span><span class="o">.</span><span class="na">charAt</span><span class="o">(</span><span class="n">i</span> <span class="o">-</span> <span class="n">1</span><span class="o">)</span> <span class="o">==</span> <span class="n">s2</span><span class="o">.</span><span class="na">charAt</span><span class="o">(</span><span class="n">j</span> <span class="o">-</span> <span class="n">1</span><span class="o">)</span> <span class="o">?</span> <span class="n">0</span> <span class="o">:</span> <span class="n">1</span><span class="o">),</span>
+                        <span class="n">Math</span><span class="o">.</span><span class="na">min</span><span class="o">(</span><span class="n">dp</span><span class="o">[</span><span class="n">i</span><span class="o">][</span><span class="n">j</span> <span class="o">-</span> <span class="n">1</span><span class="o">],</span> <span class="n">dp</span><span class="o">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">1</span><span class="o">][</span><span class="n">j</span><span class="o">])</span> <span class="o">+</span> <span class="n">1</span>
+                <span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+        <span class="k">return</span> <span class="n">dp</span><span class="o">[</span><span class="n">s1</span><span class="o">.</span><span class="na">length</span><span class="o">()][</span><span class="n">s2</span><span class="o">.</span><span class="na">length</span><span class="o">()];</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-java" data-lang="java"><span class="c1">//构建树的词典读取
+</span><span class="c1"></span><span class="kn">package</span> <span class="nn">com.pcauto.utils.bkutils</span><span class="o">;</span>
+
+<span class="kn">import</span> <span class="nn">java.io.BufferedReader</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.io.File</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.io.FileReader</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.io.IOException</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.HashSet</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.Set</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">DataHandler</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">Set</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="nf">getDictionary</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">{</span>
+        <span class="n">Set</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">dictionary</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;&gt;();</span>
+        <span class="n">BufferedReader</span> <span class="n">bufferedReader</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BufferedReader</span><span class="o">(</span><span class="k">new</span> <span class="n">FileReader</span><span class="o">(</span><span class="k">new</span> <span class="n">File</span><span class="o">(</span><span class="s">&#34;/Users/glin/IdeaProjects/Basic_Learn/nlp/zh_correct_pinyin-master/src/main/java/com/pcauto/utils/bkutils/data/PROJECTS.csv&#34;</span><span class="o">)));</span>
+        <span class="n">String</span> <span class="n">temp</span><span class="o">;</span>
+        <span class="k">while</span> <span class="o">((</span><span class="n">temp</span> <span class="o">=</span> <span class="n">bufferedReader</span><span class="o">.</span><span class="na">readLine</span><span class="o">())</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">){</span>
+            <span class="n">dictionary</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">temp</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="n">bufferedReader</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+        <span class="k">return</span> <span class="n">dictionary</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span></code></pre></td>
+<td class="lntd">
+<pre class="chroma"><code class="language-java" data-lang="java"><span class="c1">//代码测试
+</span><span class="c1"></span><span class="kn">package</span> <span class="nn">com.pcauto.utils.bkutils</span><span class="o">;</span>
+
+
+<span class="kn">import</span> <span class="nn">java.io.IOException</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">java.util.Scanner</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">SearchTest</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="c1">//数据初始化
+</span><span class="c1"></span>        <span class="n">BKTreeAlgo</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">bkTree</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BKTreeAlgo</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;(</span><span class="n">1</span><span class="o">,</span> <span class="k">new</span> <span class="n">StringEditMetric</span><span class="o">());</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">bkTree</span><span class="o">.</span><span class="na">addAll</span><span class="o">(</span><span class="n">DataHandler</span><span class="o">.</span><span class="na">getDictionary</span><span class="o">());</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">IOException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+        <span class="o">}</span>
+
+        <span class="c1">//数据搜索
+</span><span class="c1"></span>        <span class="n">Scanner</span> <span class="n">scanner</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Scanner</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">in</span><span class="o">);</span>
+        <span class="k">while</span> <span class="o">(</span><span class="n">scanner</span><span class="o">.</span><span class="na">hasNext</span><span class="o">())</span> <span class="o">{</span>
+            <span class="n">String</span> <span class="n">word</span> <span class="o">=</span> <span class="n">scanner</span><span class="o">.</span><span class="na">next</span><span class="o">().</span><span class="na">trim</span><span class="o">();</span>
+            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">printf</span><span class="o">(</span><span class="s">&#34;匹配列表: %s\n&#34;</span><span class="o">,</span> <span class="n">bkTree</span><span class="o">.</span><span class="na">search</span><span class="o">(</span><span class="n">word</span><span class="o">));</span>
+        <span class="o">}</span>
+
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></td></tr></table>
+</div>
+</div><h3 id="效果查看">效果查看</h3>
+<p><img src="media/16022276679598.jpg" alt="效果测试"></p>
+<h3 id="优化点">优化点</h3>
+<p>这种实现只是实现了汉字的纠错与搜索词的扩展，如果需要兼容拼音搜索的功能，就需要初始化一个拼音的前缀树来实现搜索词的纠错与扩词，原理与以上的实现是一样的，这里不做介绍，有兴趣或者有相关需求的小伙伴可以尝试实现。</p>
+<p><img src="media/16022280137370.jpg" alt="拼音实现效果"></p>
+<h2 id="以上的纠错与扩词只是一个初步实现以后有时间将系统的实现一个搜索流程敬请期待">以上的纠错与扩词只是一个初步实现，以后有时间将系统的实现一个搜索流程，敬请期待！！</h2>
+
+    </div>
+
+    <div class="post-copyright">
+  <p class="copyright-item">
+    <span class="item-title">文章作者</span>
+    <span class="item-content">glin</span>
+  </p>
+  <p class="copyright-item">
+    <span class="item-title">上次更新</span>
+    <span class="item-content">
+        2020-10-09 01:37
+        
+    </span>
+  </p>
+  
+  
+</div>
+<div class="post-reward">
+  <input type="checkbox" name="reward" id="reward" hidden />
+  <label class="reward-button" for="reward">赞赏支持</label>
+  <div class="qr-code">
+    
+    <label class="qr-code-image" for="reward">
+        <img class="image" src="/images/wx.png">
+        <span>微信打赏</span>
+      </label>
+    <label class="qr-code-image" for="reward">
+        <img class="image" src="/images/zfb.png">
+        <span>支付宝打赏</span>
+      </label>
+  </div>
+</div><footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/%E7%AE%97%E6%B3%95/">算法</a>
+          <a href="/tags/NLP/">NLP</a>
+          </div>
+      <nav class="post-nav">
+        
+        <a class="next" href="/post/nlp/NLP%E5%85%A5%E9%97%A8%E4%B8%80%E8%AF%8D%E8%A2%8B%E6%A8%A1%E5%9E%8B%E5%8F%8A%E5%8F%A5%E5%AD%90%E7%9B%B8%E4%BC%BC%E5%BA%A6/">
+            <span class="next-text nav-default">NLP入门（一）词袋模型及句子相似度</span>
+            <span class="next-text nav-mobile">下一篇</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+
+  
+
+  
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="http://www.cnblogs.com/wcwen1990" class="iconfont icon-cnblogs" title="cnblogs"></a>
+      <a href="mailto:glin1696@gmail.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/glinit" class="iconfont icon-github" title="github"></a>
+  <a href="https://glinit.github.io/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://gohugo.io">Hugo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/olOwOlo/hugo-theme-even">Even</a>
+  </span>
+
+  <div class="busuanzi-footer">
+    <span id="busuanzi_container_site_pv"> 本站总访问量 <span id="busuanzi_value_site_pv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 次 </span>
+      <span class="division">|</span>
+    <span id="busuanzi_container_site_uv"> 本站总访客数 <span id="busuanzi_value_site_uv"><img src="/img/spinner.svg" alt="spinner.svg"/></span> 人 </span>
+  </div>
+
+  <span class="copyright-year">
+    &copy; 
+    2020
+    <span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">GlinIt</span>
+  </span>
+</div>
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+
+
+
+<script type="text/javascript" src="/js/main.min.d7b7ada643c9c1a983026e177f141f7363b4640d619caf01d8831a6718cd44ea.js"></script>
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-138883536-1', 'auto');
+	ga('set', 'anonymizeIp', true);
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+</body>
+</html>

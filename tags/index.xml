@@ -6,7 +6,7 @@
     <description>Recent content in Tags on glinit</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
-    <lastBuildDate>Mon, 05 Oct 2020 01:37:56 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 09 Oct 2020 01:37:56 +0800</lastBuildDate>
     
 	<atom:link href="https://glinit.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     
@@ -14,9 +14,18 @@
     <item>
       <title>NLP</title>
       <link>https://glinit.github.io/tags/NLP/</link>
-      <pubDate>Mon, 05 Oct 2020 01:37:56 +0800</pubDate>
+      <pubDate>Fri, 09 Oct 2020 01:37:56 +0800</pubDate>
       
       <guid>https://glinit.github.io/tags/NLP/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>算法</title>
+      <link>https://glinit.github.io/tags/%E7%AE%97%E6%B3%95/</link>
+      <pubDate>Fri, 09 Oct 2020 01:37:56 +0800</pubDate>
+      
+      <guid>https://glinit.github.io/tags/%E7%AE%97%E6%B3%95/</guid>
       <description></description>
     </item>
     
@@ -26,15 +35,6 @@
       <pubDate>Mon, 05 Oct 2020 01:37:56 +0800</pubDate>
       
       <guid>https://glinit.github.io/tags/%E5%9F%BA%E7%A1%80/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>算法</title>
-      <link>https://glinit.github.io/tags/%E7%AE%97%E6%B3%95/</link>
-      <pubDate>Mon, 05 Oct 2020 01:37:56 +0800</pubDate>
-      
-      <guid>https://glinit.github.io/tags/%E7%AE%97%E6%B3%95/</guid>
       <description></description>
     </item>
     

@@ -3,21 +3,56 @@
   
   <url>
     <loc>https://glinit.github.io/categories/</loc>
-    <lastmod>2020-10-05T01:37:56+08:00</lastmod>
+    <lastmod>2020-10-09T01:37:56+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://glinit.github.io/tags/NLP/</loc>
-    <lastmod>2020-10-05T01:37:56+08:00</lastmod>
+    <lastmod>2020-10-09T01:37:56+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://glinit.github.io/categories/NLP/</loc>
-    <lastmod>2020-10-05T01:37:56+08:00</lastmod>
+    <lastmod>2020-10-09T01:37:56+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://glinit.github.io/post/</loc>
+    <lastmod>2020-10-09T01:37:56+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://glinit.github.io/tags/</loc>
+    <lastmod>2020-10-09T01:37:56+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://glinit.github.io/post/nlp/%E5%85%B3%E4%BA%8E%E7%BC%96%E8%BE%91%E8%B7%9D%E7%A6%BB%E7%9A%84%E5%BA%94%E7%94%A8%E6%96%B9%E6%A1%88-%E5%8D%95%E8%AF%8D%E6%88%96%E4%B8%93%E5%B1%9E%E5%90%8D%E8%AF%8D%E6%8B%BC%E5%86%99%E6%A3%80%E6%9F%A5%E7%AE%97%E6%B3%95java%E5%AE%9E%E7%8E%B0/</loc>
+    <lastmod>2020-10-09T01:37:56+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://glinit.github.io/tags/%E7%AE%97%E6%B3%95/</loc>
+    <lastmod>2020-10-09T01:37:56+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <url>
+    <loc>https://glinit.github.io/categories/%E7%AE%97%E6%B3%95/</loc>
+    <lastmod>2020-10-09T01:37:56+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -30,35 +65,7 @@
   </url>
   
   <url>
-    <loc>https://glinit.github.io/post/</loc>
-    <lastmod>2020-10-05T01:37:56+08:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>https://glinit.github.io/tags/</loc>
-    <lastmod>2020-10-05T01:37:56+08:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
     <loc>https://glinit.github.io/tags/%E5%9F%BA%E7%A1%80/</loc>
-    <lastmod>2020-10-05T01:37:56+08:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>https://glinit.github.io/tags/%E7%AE%97%E6%B3%95/</loc>
-    <lastmod>2020-10-05T01:37:56+08:00</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>https://glinit.github.io/categories/%E7%AE%97%E6%B3%95/</loc>
     <lastmod>2020-10-05T01:37:56+08:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
